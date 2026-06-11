@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KyChat 💬</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #13151e;
+    --card:      #1a1d2b;
+    --border:    #2a2d3e;
+    --bubble-me: #5b21b6;
+    --bubble-other: #1e2130;
+    --accent:    #a78bfa;
+    --accent2:   #7c3aed;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --online:    #22c55e;
+    --danger:    #f87171;
+    --radius:    18px;
+    --radius-sm: 8px;
+    --font:      'Space Grotesk', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    overflow: hidden;
+  }
+
+  /* ── SPLASH / PSEUDO SCREEN ── */
+  #splash {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    z-index: 100;
+    transition: opacity .4s, visibility .4s;
+  }
+  #splash.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  .splash-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: min(420px, 92vw);
+    text-align: center;
+    box-shadow: 0 24px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(167,139,250,.08);
+    animation: slideUp .5s cubic-bezier(.22,.68,0,1.2);
+  }
+  @keyframes slideUp {
+    from { opacity:0; transform:translateY(30px) scale(.97); }
+    to   { opacity:1; transform:none; }
+  }
+
+  .logo-wrap {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; margin-bottom: 28px;
+  }
+  .logo-icon {
+    width: 52px; height: 52px;
+  }
+  .logo-text {
+    font-size: 2rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), #c4b5fd);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -.5px;
+  }
+
+  .splash-tagline {
+    color: var(--muted); font-size: .9rem; margin-bottom: 32px; line-height: 1.5;
+  }
+
+  .field-label {
+    display: block; text-align: left; font-size: .8rem;
+    font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .08em;
+    margin-bottom: 8px;
+  }
+  .field-input {
+    width: 100%; padding: 14px 18px;
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: var(--font); font-size: 1rem;
+    outline: none; transition: border-color .2s, box-shadow .2s;
+  }
+  .field-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(167,139,250,.15);
+  }
+  .field-input::placeholder { color: var(--muted); }
+
+  .btn-join {
+    margin-top: 18px; width: 100%;
+    padding: 14px; border: none; cursor: pointer;
+    border-radius: var(--radius-sm); font-family: var(--font);
+    font-size: 1rem; font-weight: 600; letter-spacing: .02em;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff;
+    transition: transform .15s, box-shadow .15s, filter .15s;
+    box-shadow: 0 4px 20px rgba(91,33,182,.4);
+  }
+  .btn-join:hover  { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 8px 28px rgba(91,33,182,.5); }
+  .btn-join:active { transform: translateY(0); }
+
+  .pseudo-error {
+    margin-top: 10px; font-size: .8rem;
+    color: var(--danger); min-height: 18px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  #app {
+    display: flex; flex-direction: column;
+    height: 100%; opacity: 0;
+    transition: opacity .4s .1s;
+  }
+  #app.visible { opacity: 1; }
+
+  /* ── HEADER ── */
+  header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+  .header-logo { display: flex; align-items: center; gap: 10px; }
+  .header-logo .logo-text { font-size: 1.3rem; }
+  .header-logo .logo-icon { width: 32px; height: 32px; }
+
+  .header-info {
+    margin-left: auto; display: flex; align-items: center; gap: 10px;
+  }
+  .online-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.25);
+    border-radius: 20px; padding: 4px 12px;
+    font-size: .78rem; font-weight: 500; color: var(--online);
+  }
+  .online-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--online);
+    box-shadow: 0 0 6px var(--online);
+    animation: pulse-green 2s ease infinite;
+  }
+  @keyframes pulse-green {
+    0%,100% { opacity:1; }
+    50%      { opacity:.4; }
+  }
+
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 14px 5px 5px;
+    font-size: .85rem; font-weight: 500; cursor: default;
+  }
+
+  /* ── MESSAGES AREA ── */
+  #messages-wrap {
+    flex: 1; overflow-y: auto;
+    padding: 20px 16px 4px;
+    display: flex; flex-direction: column; gap: 6px;
+    scroll-behavior: smooth;
+  }
+  #messages-wrap::-webkit-scrollbar { width: 5px; }
+  #messages-wrap::-webkit-scrollbar-track { background: transparent; }
+  #messages-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── DATE SEPARATOR ── */
+  .date-sep {
+    display: flex; align-items: center; gap: 12px;
+    margin: 12px 0 4px;
+  }
+  .date-sep span {
+    font-size: .72rem; color: var(--muted); white-space: nowrap;
+    font-weight: 500; letter-spacing: .05em;
+  }
+  .date-sep::before, .date-sep::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ── MESSAGE ROW ── */
+  .msg-row {
+    display: flex; align-items: flex-end; gap: 8px;
+    animation: fadeIn .25s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity:0; transform:translateY(8px); }
+    to   { opacity:1; transform:none; }
+  }
+  .msg-row.me { flex-direction: row-reverse; }
+
+  /* Avatar */
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: .78rem; font-weight: 700; color: #fff;
+    position: relative; overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Bubble */
+  .bubble-group { display: flex; flex-direction: column; gap: 2px; max-width: min(72%, 480px); }
+  .msg-row.me .bubble-group { align-items: flex-end; }
+
+  .bubble-meta {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 0 4px; margin-bottom: 3px;
+  }
+  .msg-row.me .bubble-meta { flex-direction: row-reverse; }
+
+  .meta-name {
+    font-size: .78rem; font-weight: 600; color: var(--accent);
+  }
+  .msg-row.me .meta-name { color: #c4b5fd; }
+  .meta-time {
+    font-size: .68rem; color: var(--muted);
+    font-family: monospace;
+  }
+
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: .92rem; line-height: 1.55;
+    word-break: break-word;
+    position: relative;
+  }
+  .bubble.other {
+    background: var(--bubble-other);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    color: var(--text);
+  }
+  .bubble.me {
+    background: var(--bubble-me);
+    border-bottom-right-radius: 4px;
+    color: #f0ebff;
+    box-shadow: 0 2px 12px rgba(91,33,182,.3);
+  }
+
+  /* Image in bubble */
+  .bubble img.msg-img {
+    max-width: 240px; max-height: 200px;
+    border-radius: 10px; display: block;
+    margin-top: 6px; cursor: zoom-in;
+    transition: transform .15s;
+  }
+  .bubble img.msg-img:hover { transform: scale(1.02); }
+
+  /* ── TYPING INDICATOR ── */
+  #typing-bar {
+    padding: 4px 16px 2px;
+    min-height: 22px;
+    font-size: .75rem; color: var(--muted);
+    font-style: italic;
+    flex-shrink: 0;
+  }
+
+  /* ── INPUT AREA ── */
+  #input-area {
+    padding: 12px 16px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .input-row {
+    display: flex; align-items: flex-end; gap: 10px;
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: 24px; padding: 8px 8px 8px 16px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .input-row:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(167,139,250,.12);
+  }
+
+  #msg-input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--text); font-family: var(--font); font-size: .95rem;
+    resize: none; max-height: 120px; line-height: 1.5;
+    padding: 4px 0;
+  }
+  #msg-input::placeholder { color: var(--muted); }
+
+  .toolbar {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .tool-btn {
+    width: 38px; height: 38px; border: none; background: none;
+    border-radius: 50%; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    color: var(--muted); transition: background .15s, color .15s;
+    flex-shrink: 0;
+  }
+  .tool-btn:hover { background: rgba(167,139,250,.12); color: var(--accent); }
+  .tool-btn svg { width: 20px; height: 20px; }
+
+  #send-btn {
+    width: 40px; height: 40px; border: none; cursor: pointer;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff; flex-shrink: 0;
+    transition: transform .15s, box-shadow .15s, filter .15s;
+    box-shadow: 0 2px 12px rgba(91,33,182,.4);
+  }
+  #send-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
+  #send-btn:active { transform: scale(.96); }
+  #send-btn svg { width: 18px; height: 18px; margin-left: 2px; }
+
+  /* ── LIGHTBOX ── */
+  #lightbox {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,.85); backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+    cursor: zoom-out;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img { max-width: 90vw; max-height: 88vh; border-radius: 12px; }
+
+  /* ── SYSTEM MSG ── */
+  .sys-msg {
+    text-align: center; font-size: .72rem; color: var(--muted);
+    padding: 4px 0; font-style: italic; letter-spacing: .02em;
+  }
+
+  /* ── EMOJI PICKER (simple) ── */
+  #emoji-panel {
+    display: none; position: absolute; bottom: 80px; right: 16px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 12px; width: 280px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    display: none; flex-wrap: wrap; gap: 4px;
+    z-index: 50;
+  }
+  #emoji-panel.open { display: flex; }
+  .emoji-btn {
+    font-size: 1.3rem; width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px; cursor: pointer; border: none; background: none;
+    transition: background .1s; user-select: none;
+  }
+  .emoji-btn:hover { background: rgba(167,139,250,.15); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 500px) {
+    .splash-card { padding: 36px 24px; }
+    .bubble { font-size: .88rem; }
+    .bubble-group { max-width: 86%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SPLASH ══════════════ -->
+<div id="splash">
+  <div class="splash-card">
+    <div class="logo-wrap">
+      <!-- Logo SVG : onde radio animée -->
+      <svg class="logo-icon" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg1" x1="0" y1="0" x2="52" y2="52" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#a78bfa"/>
+          </linearGradient>
+        </defs>
+        <rect width="52" height="52" rx="14" fill="url(#lg1)"/>
+        <!-- Bulle chat -->
+        <path d="M10 14h32a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H28l-6 6v-6h-12a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="rgba(255,255,255,.25)"/>
+        <!-- Points pulsants -->
+        <circle cx="19" cy="25" r="3" fill="#fff" opacity=".9">
+          <animate attributeName="r" values="3;4;3" dur="1.4s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="26" cy="25" r="3" fill="#fff" opacity=".9">
+          <animate attributeName="r" values="3;4;3" dur="1.4s" begin=".2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="33" cy="25" r="3" fill="#fff" opacity=".9">
+          <animate attributeName="r" values="3;4;3" dur="1.4s" begin=".4s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+      <span class="logo-text">KyChat</span>
+    </div>
+    <p class="splash-tagline">Le chat global. Entre ton pseudo pour rejoindre la conversation en direct.</p>
+    <label class="field-label" for="pseudo-input">Ton pseudo</label>
+    <input id="pseudo-input" class="field-input" type="text"
+           placeholder="ex: Shadow_Fox" maxlength="24" autocomplete="off" spellcheck="false"/>
+    <div class="pseudo-error" id="pseudo-error"></div>
+    <button class="btn-join" id="join-btn">Rejoindre →</button>
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="app">
+  <header>
+    <div class="header-logo">
+      <svg class="logo-icon" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lg2" x1="0" y1="0" x2="52" y2="52" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#a78bfa"/>
+          </linearGradient>
+        </defs>
+        <rect width="52" height="52" rx="14" fill="url(#lg2)"/>
+        <path d="M10 14h32a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H28l-6 6v-6h-12a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="rgba(255,255,255,.25)"/>
+        <circle cx="19" cy="25" r="3" fill="#fff" opacity=".9"/>
+        <circle cx="26" cy="25" r="3" fill="#fff" opacity=".9"/>
+        <circle cx="33" cy="25" r="3" fill="#fff" opacity=".9"/>
+      </svg>
+      <span class="logo-text">KyChat</span>
+    </div>
+    <div class="header-info">
+      <div class="online-badge">
+        <span class="online-dot"></span>
+        <span id="online-count">—</span> en ligne
+      </div>
+      <div class="user-chip" id="user-chip">
+        <!-- rempli dynamiquement -->
+      </div>
+    </div>
+  </header>
+
+  <div id="messages-wrap"></div>
+  <div id="typing-bar"></div>
+
+  <!-- Emoji panel -->
+  <div id="emoji-panel"></div>
+
+  <div id="input-area">
+    <div class="input-row">
+      <textarea id="msg-input" rows="1"
+                placeholder="Envoie un message…"
+                maxlength="1000"></textarea>
+      <div class="toolbar">
+        <!-- Emoji -->
+        <button class="tool-btn" id="emoji-toggle-btn" title="Emoji">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M8 13s1.5 2 4 2 4-2 4-2"/>
+            <line x1="9" y1="9" x2="9.01" y2="9"/>
+            <line x1="15" y1="9" x2="15.01" y2="9"/>
+          </svg>
+        </button>
+        <!-- Image -->
+        <button class="tool-btn" id="img-btn" title="Envoyer une image">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </button>
+        <input id="img-input" type="file" accept="image/*" style="display:none"/>
+        <!-- Send -->
+        <button id="send-btn" title="Envoyer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="22" y1="2" x2="11" y2="13"/>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox">
+  <img id="lightbox-img" src="" alt=""/>
+</div>
+
+<!-- ══════════════ FIREBASE + LOGIQUE ══════════════ -->
+<script type="module">
+import { initializeApp }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, query, orderByKey, limitToLast }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+/* ── Firebase init ── */
+const firebaseConfig = {
+  apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
+  authDomain: "kylita-f2923.firebaseapp.com",
+  databaseURL: "https://kylita-f2923-default-rtdb.firebaseio.com",
+  projectId: "kylita-f2923",
+  storageBucket: "kylita-f2923.firebasestorage.app",
+  messagingSenderId: "431823530994",
+  appId: "1:431823530994:web:88a07e633751686e5ad96b",
+  measurementId: "G-F4LLNWQJ16"
+};
+const fbApp  = initializeApp(firebaseConfig);
+const db     = getDatabase(fbApp);
+
+/* ── Paths (tout sous kychat/) ── */
+const MSGS_REF   = ref(db, "kychat/messages");
+const ONLINE_REF = ref(db, "kychat/online");
+const TYPING_REF = ref(db, "kychat/typing");
+
+/* ── State ── */
+let myPseudo    = localStorage.getItem("kychat_pseudo") || null;
+let myOnlineRef = null;
+let myTypingRef = null;
+let typingTimer = null;
+let lastDateLabel = "";
+
+/* ── Couleur avatar déterministe ── */
+const AVATAR_COLORS = [
+  "#7c3aed","#0891b2","#059669","#d97706",
+  "#dc2626","#db2777","#4f46e5","#0d9488"
+];
+function pseudoColor(name) {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+function initials(name) {
+  return name.slice(0,2).toUpperCase();
+}
+function avatarHTML(name, size=34) {
+  const c = pseudoColor(name);
+  return `<div class="avatar" style="background:${c};width:${size}px;height:${size}px;font-size:${size*.3}px">${initials(name)}</div>`;
+}
+
+/* ── Emojis ── */
+const EMOJIS = ["😀","😂","😍","🥰","😎","🤔","😅","🤣","😭","😤",
+                "🔥","❤️","👍","👏","🎉","💯","✨","😱","🙏","🤝",
+                "💀","😏","🥲","😬","🫡","💬","🚀","👀","💪","🎮"];
+
+/* ── DOM ── */
+const splash      = document.getElementById("splash");
+const appEl       = document.getElementById("app");
+const pseudoInput = document.getElementById("pseudo-input");
+const pseudoErr   = document.getElementById("pseudo-error");
+const joinBtn     = document.getElementById("join-btn");
+const msgsWrap    = document.getElementById("messages-wrap");
+const msgInput    = document.getElementById("msg-input");
+const sendBtn     = document.getElementById("send-btn");
+const imgBtn      = document.getElementById("img-btn");
+const imgInput    = document.getElementById("img-input");
+const emojiToggle = document.getElementById("emoji-toggle-btn");
+const emojiPanel  = document.getElementById("emoji-panel");
+const typingBar   = document.getElementById("typing-bar");
+const onlineCount = document.getElementById("online-count");
+const userChip    = document.getElementById("user-chip");
+const lightbox    = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightbox-img");
+
+/* ── Build emoji panel ── */
+EMOJIS.forEach(e => {
+  const btn = document.createElement("button");
+  btn.className = "emoji-btn"; btn.textContent = e;
+  btn.addEventListener("click", () => {
+    insertAtCursor(e);
+    msgInput.focus();
+  });
+  emojiPanel.appendChild(btn);
+});
+
+function insertAtCursor(text) {
+  const s = msgInput.selectionStart, end = msgInput.selectionEnd;
+  msgInput.value = msgInput.value.slice(0,s) + text + msgInput.value.slice(end);
+  msgInput.setSelectionRange(s+text.length, s+text.length);
+  autoResize();
+}
+
+emojiToggle.addEventListener("click", () => {
+  emojiPanel.classList.toggle("open");
+});
+document.addEventListener("click", e => {
+  if (!emojiPanel.contains(e.target) && e.target !== emojiToggle) {
+    emojiPanel.classList.remove("open");
+  }
+});
+
+/* ── Auto-resize textarea ── */
+function autoResize() {
+  msgInput.style.height = "auto";
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
+}
+msgInput.addEventListener("input", autoResize);
+
+/* ── Formatage date/heure ── */
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
+}
+function fmtDateLabel(ts) {
+  const d = new Date(ts);
+  const today = new Date();
+  const yesterday = new Date(today); yesterday.setDate(today.getDate()-1);
+  if (d.toDateString() === today.toDateString()) return "Aujourd'hui";
+  if (d.toDateString() === yesterday.toDateString()) return "Hier";
+  return d.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" });
+}
+
+/* ── Scroll to bottom ── */
+function scrollBottom(force=false) {
+  const el = msgsWrap;
+  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  if (atBottom || force) el.scrollTop = el.scrollHeight;
+}
+
+/* ── Render message ── */
+let shownKeys = new Set();
+function renderMsg(key, data) {
+  if (shownKeys.has(key)) return;
+  shownKeys.add(key);
+
+  const ts   = data.ts   || Date.now();
+  const dateLabel = fmtDateLabel(ts);
+
+  if (dateLabel !== lastDateLabel) {
+    lastDateLabel = dateLabel;
+    const sep = document.createElement("div");
+    sep.className = "date-sep";
+    sep.innerHTML = `<span>${dateLabel}</span>`;
+    msgsWrap.appendChild(sep);
+  }
+
+  // Système
+  if (data.type === "system") {
+    const d = document.createElement("div");
+    d.className = "sys-msg";
+    d.textContent = data.text;
+    msgsWrap.appendChild(d);
+    scrollBottom();
+    return;
+  }
+
+  const isMe = data.pseudo === myPseudo;
+  const row  = document.createElement("div");
+  row.className = `msg-row ${isMe ? "me" : ""}`;
+
+  let contentHTML = "";
+  if (data.type === "image" && data.dataUrl) {
+    contentHTML = `<img class="msg-img" src="${data.dataUrl}" alt="image" loading="lazy"/>`;
+  } else {
+    contentHTML = escapeHtml(data.text || "");
+  }
+
+  row.innerHTML = `
+    ${avatarHTML(data.pseudo)}
+    <div class="bubble-group">
+      <div class="bubble-meta">
+        <span class="meta-name">${escapeHtml(data.pseudo)}</span>
+        <span class="meta-time">${fmtTime(ts)}</span>
+      </div>
+      <div class="bubble ${isMe ? "me" : "other"}">${contentHTML}</div>
+    </div>
+  `;
+
+  // Lightbox sur images
+  const img = row.querySelector(".msg-img");
+  if (img) {
+    img.addEventListener("click", () => {
+      lightboxImg.src = img.src;
+      lightbox.classList.add("open");
+    });
+  }
+
+  msgsWrap.appendChild(row);
+  scrollBottom();
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+          .replace(/"/g,"&quot;").replace(/'/g,"&#39;")
+          .replace(/\n/g,"<br/>");
+}
+
+lightbox.addEventListener("click", () => lightbox.classList.remove("open"));
+
+/* ── Connexion Firebase messages (50 derniers) ── */
+function listenMessages() {
+  const q = query(MSGS_REF, orderByKey(), limitToLast(100));
+  onValue(q, snap => {
+    const msgs = snap.val() || {};
+    Object.entries(msgs)
+      .sort(([a],[b]) => a<b?-1:1)
+      .forEach(([k,v]) => renderMsg(k,v));
+  });
+}
+
+/* ── Online presence ── */
+function setupPresence() {
+  myOnlineRef = ref(db, `kychat/online/${myPseudo}`);
+  set(myOnlineRef, { pseudo: myPseudo, joinedAt: Date.now() });
+  onDisconnect(myOnlineRef).remove();
+
+  onValue(ONLINE_REF, snap => {
+    const users = snap.val() || {};
+    const list = Object.keys(users);
+    onlineCount.textContent = list.length;
+  });
+}
+
+/* ── Typing ── */
+function setTyping(val) {
+  if (!myPseudo) return;
+  myTypingRef = ref(db, `kychat/typing/${myPseudo}`);
+  if (val) set(myTypingRef, { pseudo: myPseudo });
+  else     remove(myTypingRef);
+}
+
+onValue(TYPING_REF, snap => {
+  const typers = snap.val() || {};
+  const others = Object.values(typers)
+    .map(v => v.pseudo)
+    .filter(p => p !== myPseudo);
+  if (others.length === 0) typingBar.textContent = "";
+  else if (others.length === 1) typingBar.textContent = `${others[0]} est en train d'écrire…`;
+  else typingBar.textContent = `${others.slice(0,-1).join(", ")} et ${others.at(-1)} écrivent…`;
+});
+
+msgInput.addEventListener("input", () => {
+  if (typingTimer) clearTimeout(typingTimer);
+  setTyping(true);
+  typingTimer = setTimeout(() => setTyping(false), 2000);
+});
+
+/* ── Envoi message texte ── */
+function sendText() {
+  const text = msgInput.value.trim();
+  if (!text) return;
+  push(MSGS_REF, {
+    pseudo: myPseudo,
+    text,
+    type: "text",
+    ts: Date.now()
+  });
+  msgInput.value = "";
+  msgInput.style.height = "auto";
+  setTyping(false);
+  if (typingTimer) clearTimeout(typingTimer);
+}
+
+sendBtn.addEventListener("click", sendText);
+msgInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendText();
+  }
+});
+
+/* ── Envoi image (base64) ── */
+imgBtn.addEventListener("click", () => imgInput.click());
+imgInput.addEventListener("change", () => {
+  const file = imgInput.files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) {
+    alert("Image trop grande (max 3 Mo)"); return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    push(MSGS_REF, {
+      pseudo: myPseudo,
+      type: "image",
+      dataUrl: e.target.result,
+      ts: Date.now()
+    });
+  };
+  reader.readAsDataURL(file);
+  imgInput.value = "";
+});
+
+/* ── Join ── */
+function joinChat(pseudo) {
+  myPseudo = pseudo;
+  localStorage.setItem("kychat_pseudo", pseudo);
+
+  // UI
+  userChip.innerHTML = `${avatarHTML(pseudo, 28)}<span>${escapeHtml(pseudo)}</span>`;
+  splash.classList.add("hidden");
+  appEl.classList.add("visible");
+  msgInput.focus();
+
+  setupPresence();
+  listenMessages();
+
+  // Message système de join
+  push(MSGS_REF, {
+    pseudo: "Système",
+    text: `${pseudo} a rejoint le chat ✨`,
+    type: "system",
+    ts: Date.now()
+  });
+}
+
+/* ── Si pseudo déjà stocké → direct ── */
+if (myPseudo) {
+  joinChat(myPseudo);
+} else {
+  pseudoInput.focus();
+}
+
+joinBtn.addEventListener("click", () => {
+  const p = pseudoInput.value.trim();
+  if (!p || p.length < 2) {
+    pseudoErr.textContent = "Pseudo trop court (min 2 caractères)";
+    return;
+  }
+  if (!/^[\w\-. éàèùâêîôûçœ]+$/i.test(p)) {
+    pseudoErr.textContent = "Pseudo invalide (lettres, chiffres, tirets)";
+    return;
+  }
+  pseudoErr.textContent = "";
+  joinChat(p);
+});
+
+pseudoInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") joinBtn.click();
+});
+</script>
+</body>
+</html>
