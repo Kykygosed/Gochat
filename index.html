@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>KygoChat 💬</title>
+<title>KyChat 💬</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,7 +34,7 @@
     overflow: hidden;
   }
 
-  /* ── SPLASH / PSEUDO SCREEN ── */
+  /* ── SPLASH ── */
   #splash {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
@@ -63,9 +63,7 @@
     display: flex; align-items: center; justify-content: center;
     gap: 12px; margin-bottom: 28px;
   }
-  .logo-icon {
-    width: 52px; height: 52px;
-  }
+  .logo-icon { width: 52px; height: 52px; }
   .logo-text {
     font-size: 2rem; font-weight: 700;
     background: linear-gradient(135deg, var(--accent), #c4b5fd);
@@ -144,7 +142,10 @@
     background: rgba(34,197,94,.1); border: 1px solid rgba(34,197,94,.25);
     border-radius: 20px; padding: 4px 12px;
     font-size: .78rem; font-weight: 500; color: var(--online);
+    cursor: pointer; transition: background .15s;
+    user-select: none;
   }
+  .online-badge:hover { background: rgba(34,197,94,.18); }
   .online-dot {
     width: 7px; height: 7px; border-radius: 50%;
     background: var(--online);
@@ -160,7 +161,74 @@
     display: flex; align-items: center; gap: 8px;
     background: var(--card); border: 1px solid var(--border);
     border-radius: 20px; padding: 5px 14px 5px 5px;
-    font-size: .85rem; font-weight: 500; cursor: default;
+    font-size: .85rem; font-weight: 500; cursor: pointer;
+    transition: border-color .15s;
+  }
+  .user-chip:hover { border-color: var(--accent); }
+
+  /* ── HEADER ACTIONS ── */
+  .header-action-btn {
+    width: 36px; height: 36px; border: none; background: none;
+    border-radius: 50%; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    color: var(--muted); transition: background .15s, color .15s;
+  }
+  .header-action-btn:hover { background: rgba(167,139,250,.12); color: var(--accent); }
+  .header-action-btn svg { width: 18px; height: 18px; }
+
+  /* ── BODY WRAPPER (chat + sidebar) ── */
+  #body-wrap {
+    flex: 1; display: flex; overflow: hidden;
+  }
+
+  /* ── SIDEBAR ONLINE ── */
+  #sidebar {
+    width: 220px; flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    transition: width .25s ease, opacity .25s ease;
+  }
+  #sidebar.closed { width: 0; opacity: 0; pointer-events: none; }
+
+  .sidebar-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    font-size: .78rem; font-weight: 600;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: .08em;
+    display: flex; align-items: center; gap: 6px;
+  }
+  #sidebar-list {
+    flex: 1; overflow-y: auto; padding: 8px 0;
+  }
+  #sidebar-list::-webkit-scrollbar { width: 3px; }
+  #sidebar-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .sidebar-user {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 16px;
+    font-size: .85rem; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar-user .s-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--online); flex-shrink: 0;
+  }
+  .sidebar-user .s-name {
+    overflow: hidden; text-overflow: ellipsis;
+    color: var(--text);
+  }
+  .sidebar-user .s-you {
+    margin-left: auto; font-size: .7rem; color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ── CHAT COLUMN ── */
+  #chat-col {
+    flex: 1; display: flex; flex-direction: column; overflow: hidden;
+    position: relative;
   }
 
   /* ── MESSAGES AREA ── */
@@ -169,6 +237,11 @@
     padding: 20px 16px 4px;
     display: flex; flex-direction: column; gap: 6px;
     scroll-behavior: smooth;
+    position: relative;
+  }
+  #messages-wrap.custom-bg {
+    background-size: cover;
+    background-position: center;
   }
   #messages-wrap::-webkit-scrollbar { width: 5px; }
   #messages-wrap::-webkit-scrollbar-track { background: transparent; }
@@ -182,6 +255,7 @@
   .date-sep span {
     font-size: .72rem; color: var(--muted); white-space: nowrap;
     font-weight: 500; letter-spacing: .05em;
+    background: rgba(13,15,20,.7); padding: 2px 8px; border-radius: 20px;
   }
   .date-sep::before, .date-sep::after {
     content: ''; flex: 1; height: 1px; background: var(--border);
@@ -198,17 +272,13 @@
   }
   .msg-row.me { flex-direction: row-reverse; }
 
-  /* Avatar */
   .avatar {
     width: 34px; height: 34px; border-radius: 50%;
     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     font-size: .78rem; font-weight: 700; color: #fff;
-    position: relative; overflow: hidden;
     box-shadow: 0 2px 8px rgba(0,0,0,.4);
   }
-  .avatar img { width: 100%; height: 100%; object-fit: cover; }
 
-  /* Bubble */
   .bubble-group { display: flex; flex-direction: column; gap: 2px; max-width: min(72%, 480px); }
   .msg-row.me .bubble-group { align-items: flex-end; }
 
@@ -218,21 +288,15 @@
   }
   .msg-row.me .bubble-meta { flex-direction: row-reverse; }
 
-  .meta-name {
-    font-size: .78rem; font-weight: 600; color: var(--accent);
-  }
+  .meta-name { font-size: .78rem; font-weight: 600; color: var(--accent); }
   .msg-row.me .meta-name { color: #c4b5fd; }
-  .meta-time {
-    font-size: .68rem; color: var(--muted);
-    font-family: monospace;
-  }
+  .meta-time { font-size: .68rem; color: var(--muted); font-family: monospace; }
 
   .bubble {
     padding: 10px 14px;
     border-radius: 16px;
     font-size: .92rem; line-height: 1.55;
     word-break: break-word;
-    position: relative;
   }
   .bubble.other {
     background: var(--bubble-other);
@@ -247,7 +311,6 @@
     box-shadow: 0 2px 12px rgba(91,33,182,.3);
   }
 
-  /* Image in bubble */
   .bubble img.msg-img {
     max-width: 240px; max-height: 200px;
     border-radius: 10px; display: block;
@@ -255,8 +318,13 @@
     transition: transform .15s;
   }
   .bubble img.msg-img:hover { transform: scale(1.02); }
+  .bubble img.msg-gif {
+    max-width: 260px; max-height: 220px;
+    border-radius: 10px; display: block;
+    margin-top: 0; cursor: zoom-in;
+  }
 
-  /* ── TYPING INDICATOR ── */
+  /* ── TYPING ── */
   #typing-bar {
     padding: 4px 16px 2px;
     min-height: 22px;
@@ -291,9 +359,7 @@
   }
   #msg-input::placeholder { color: var(--muted); }
 
-  .toolbar {
-    display: flex; align-items: center; gap: 4px;
-  }
+  .toolbar { display: flex; align-items: center; gap: 4px; }
   .tool-btn {
     width: 38px; height: 38px; border: none; background: none;
     border-radius: 50%; cursor: pointer; display: flex;
@@ -326,15 +392,15 @@
   #lightbox.open { display: flex; }
   #lightbox img { max-width: 90vw; max-height: 88vh; border-radius: 12px; }
 
-  /* ── SYSTEM MSG ── */
+  /* ── SYS MSG ── */
   .sys-msg {
     text-align: center; font-size: .72rem; color: var(--muted);
     padding: 4px 0; font-style: italic; letter-spacing: .02em;
   }
 
-  /* ── EMOJI PICKER (simple) ── */
+  /* ── EMOJI PANEL ── */
   #emoji-panel {
-    display: none; position: absolute; bottom: 80px; right: 16px;
+    position: absolute; bottom: 80px; right: 16px;
     background: var(--card); border: 1px solid var(--border);
     border-radius: 16px; padding: 12px; width: 280px;
     box-shadow: 0 8px 32px rgba(0,0,0,.5);
@@ -350,8 +416,117 @@
   }
   .emoji-btn:hover { background: rgba(167,139,250,.15); }
 
-  /* ── RESPONSIVE ── */
-  @media (max-width: 500px) {
+  /* ── GIF PANEL ── */
+  #gif-panel {
+    position: absolute; bottom: 80px; left: 16px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 12px; width: 320px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    display: none; flex-direction: column; gap: 10px;
+    z-index: 50; max-height: 340px;
+  }
+  #gif-panel.open { display: flex; }
+  #gif-search {
+    width: 100%; padding: 9px 14px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: var(--font); font-size: .88rem;
+    outline: none; transition: border-color .2s;
+  }
+  #gif-search:focus { border-color: var(--accent); }
+  #gif-search::placeholder { color: var(--muted); }
+  #gif-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 6px; overflow-y: auto; max-height: 250px;
+  }
+  #gif-grid::-webkit-scrollbar { width: 3px; }
+  #gif-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .gif-item {
+    width: 100%; aspect-ratio: 1; object-fit: cover;
+    border-radius: 8px; cursor: pointer;
+    transition: transform .15s, opacity .15s;
+  }
+  .gif-item:hover { transform: scale(1.04); opacity: .9; }
+  #gif-loading {
+    text-align: center; color: var(--muted); font-size: .8rem; padding: 12px;
+  }
+
+  /* ── MODAL BASE ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 150;
+    background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 28px 28px 24px;
+    width: min(400px, 92vw);
+    box-shadow: 0 24px 60px rgba(0,0,0,.6);
+    animation: slideUp .3s cubic-bezier(.22,.68,0,1.2);
+  }
+  .modal-title {
+    font-size: 1.1rem; font-weight: 700; margin-bottom: 18px;
+    background: linear-gradient(135deg, var(--accent), #c4b5fd);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .modal-close {
+    float: right; background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 1.3rem; line-height: 1;
+    margin-top: -4px;
+  }
+  .modal-close:hover { color: var(--text); }
+
+  /* ── PSEUDO CHANGE MODAL ── */
+  #pseudo-modal .modal-box { }
+
+  /* ── WALLPAPER MODAL ── */
+  .wl-section { margin-bottom: 16px; }
+  .wl-label {
+    font-size: .78rem; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .08em;
+    margin-bottom: 8px; display: block;
+  }
+  .color-palette {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;
+  }
+  .color-swatch {
+    width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform .15s, border-color .15s;
+  }
+  .color-swatch:hover { transform: scale(1.1); }
+  .color-swatch.active { border-color: var(--accent); transform: scale(1.1); }
+  .wl-btn {
+    width: 100%; padding: 11px;
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: var(--font); font-size: .9rem; font-weight: 500;
+    cursor: pointer; transition: border-color .15s, background .15s;
+    text-align: left;
+  }
+  .wl-btn:hover { border-color: var(--accent); background: rgba(167,139,250,.06); }
+  .wl-reset {
+    display: block; margin-top: 10px; width: 100%; padding: 9px;
+    background: none; border: 1px solid rgba(248,113,113,.3);
+    border-radius: var(--radius-sm); color: var(--danger);
+    font-family: var(--font); font-size: .85rem; cursor: pointer;
+    transition: background .15s;
+  }
+  .wl-reset:hover { background: rgba(248,113,113,.08); }
+
+  .modal-btn {
+    margin-top: 14px; width: 100%; padding: 12px;
+    border: none; cursor: pointer; border-radius: var(--radius-sm);
+    font-family: var(--font); font-size: .95rem; font-weight: 600;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff; transition: filter .15s, transform .15s;
+    box-shadow: 0 4px 16px rgba(91,33,182,.35);
+  }
+  .modal-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+  @media (max-width: 600px) {
+    #sidebar { display: none; }
     .splash-card { padding: 36px 24px; }
     .bubble { font-size: .88rem; }
     .bubble-group { max-width: 86%; }
@@ -360,11 +535,10 @@
 </head>
 <body>
 
-<!-- ══════════════ SPLASH ══════════════ -->
+<!-- SPLASH -->
 <div id="splash">
   <div class="splash-card">
     <div class="logo-wrap">
-      <!-- Logo SVG : onde radio animée -->
       <svg class="logo-icon" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="lg1" x1="0" y1="0" x2="52" y2="52" gradientUnits="userSpaceOnUse">
@@ -373,9 +547,7 @@
           </linearGradient>
         </defs>
         <rect width="52" height="52" rx="14" fill="url(#lg1)"/>
-        <!-- Bulle chat -->
         <path d="M10 14h32a4 4 0 0 1 4 4v14a4 4 0 0 1-4 4H28l-6 6v-6h-12a4 4 0 0 1-4-4V18a4 4 0 0 1 4-4z" fill="rgba(255,255,255,.25)"/>
-        <!-- Points pulsants -->
         <circle cx="19" cy="25" r="3" fill="#fff" opacity=".9">
           <animate attributeName="r" values="3;4;3" dur="1.4s" repeatCount="indefinite"/>
         </circle>
@@ -397,7 +569,7 @@
   </div>
 </div>
 
-<!-- ══════════════ APP ══════════════ -->
+<!-- APP -->
 <div id="app">
   <header>
     <div class="header-logo">
@@ -417,53 +589,92 @@
       <span class="logo-text">KyChat</span>
     </div>
     <div class="header-info">
-      <div class="online-badge">
+      <!-- Wallpaper btn -->
+      <button class="header-action-btn" id="wallpaper-btn" title="Changer le fond">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <circle cx="8" cy="9" r="1.5"/>
+          <polyline points="22 17 16 11 8 17"/>
+          <line x1="2" y1="21" x2="22" y2="21"/>
+        </svg>
+      </button>
+      <div class="online-badge" id="online-badge-btn" title="Voir les connectés">
         <span class="online-dot"></span>
         <span id="online-count">—</span> en ligne
       </div>
-      <div class="user-chip" id="user-chip">
-        <!-- rempli dynamiquement -->
+      <div class="user-chip" id="user-chip" title="Changer de pseudo">
+        <!-- dynamic -->
       </div>
     </div>
   </header>
 
-  <div id="messages-wrap"></div>
-  <div id="typing-bar"></div>
+  <div id="body-wrap">
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <div class="sidebar-header">
+        <span class="online-dot" style="flex-shrink:0"></span>
+        Connectés
+      </div>
+      <div id="sidebar-list"></div>
+    </div>
 
-  <!-- Emoji panel -->
-  <div id="emoji-panel"></div>
+    <!-- Chat column -->
+    <div id="chat-col">
+      <div id="messages-wrap"></div>
+      <div id="typing-bar"></div>
 
-  <div id="input-area">
-    <div class="input-row">
-      <textarea id="msg-input" rows="1"
-                placeholder="Envoie un message…"
-                maxlength="1000"></textarea>
-      <div class="toolbar">
-        <!-- Emoji -->
-        <button class="tool-btn" id="emoji-toggle-btn" title="Emoji">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M8 13s1.5 2 4 2 4-2 4-2"/>
-            <line x1="9" y1="9" x2="9.01" y2="9"/>
-            <line x1="15" y1="9" x2="15.01" y2="9"/>
-          </svg>
-        </button>
-        <!-- Image -->
-        <button class="tool-btn" id="img-btn" title="Envoyer une image">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/>
-            <polyline points="21 15 16 10 5 21"/>
-          </svg>
-        </button>
-        <input id="img-input" type="file" accept="image/*" style="display:none"/>
-        <!-- Send -->
-        <button id="send-btn" title="Envoyer">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-            <line x1="22" y1="2" x2="11" y2="13"/>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-          </svg>
-        </button>
+      <!-- Emoji panel (absolute inside chat-col) -->
+      <div id="emoji-panel"></div>
+
+      <!-- GIF panel (absolute inside chat-col) -->
+      <div id="gif-panel">
+        <input id="gif-search" type="text" placeholder="Rechercher un GIF…" autocomplete="off"/>
+        <div id="gif-grid"></div>
+        <div id="gif-loading" style="display:none">Chargement…</div>
+      </div>
+
+      <div id="input-area">
+        <div class="input-row">
+          <textarea id="msg-input" rows="1"
+                    placeholder="Envoie un message…"
+                    maxlength="1000"></textarea>
+          <div class="toolbar">
+            <!-- Emoji -->
+            <button class="tool-btn" id="emoji-toggle-btn" title="Emoji">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 13s1.5 2 4 2 4-2 4-2"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                <line x1="15" y1="9" x2="15.01" y2="9"/>
+              </svg>
+            </button>
+            <!-- GIF -->
+            <button class="tool-btn" id="gif-toggle-btn" title="Envoyer un GIF">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="6" width="20" height="12" rx="3"/>
+                <path d="M8 12h-2v-2m0 0v4m0-4h2" stroke-linecap="round"/>
+                <line x1="12" y1="10" x2="12" y2="14"/>
+                <path d="M16 10h2v2h-2v2h2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <!-- Image -->
+            <button class="tool-btn" id="img-btn" title="Envoyer une image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </button>
+            <input id="img-input" type="file" accept="image/*" style="display:none"/>
+            <!-- Send -->
+            <button id="send-btn" title="Envoyer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -474,13 +685,45 @@
   <img id="lightbox-img" src="" alt=""/>
 </div>
 
-<!-- ══════════════ FIREBASE + LOGIQUE ══════════════ -->
+<!-- PSEUDO CHANGE MODAL -->
+<div class="modal-overlay" id="pseudo-modal">
+  <div class="modal-box">
+    <button class="modal-close" id="pseudo-modal-close">✕</button>
+    <div class="modal-title">Changer de pseudo</div>
+    <label class="field-label" for="new-pseudo-input">Nouveau pseudo</label>
+    <input id="new-pseudo-input" class="field-input" type="text"
+           placeholder="ex: Neon_Tiger" maxlength="24" autocomplete="off" spellcheck="false"/>
+    <div class="pseudo-error" id="new-pseudo-error"></div>
+    <button class="modal-btn" id="pseudo-save-btn">Confirmer →</button>
+  </div>
+</div>
+
+<!-- WALLPAPER MODAL -->
+<div class="modal-overlay" id="wallpaper-modal">
+  <div class="modal-box">
+    <button class="modal-close" id="wallpaper-modal-close">✕</button>
+    <div class="modal-title">Fond d'écran du chat</div>
+
+    <div class="wl-section">
+      <span class="wl-label">Couleur unie</span>
+      <div class="color-palette" id="color-palette"></div>
+    </div>
+
+    <div class="wl-section">
+      <span class="wl-label">Image personnalisée</span>
+      <button class="wl-btn" id="wl-upload-btn">📂 Choisir une image depuis mon appareil</button>
+      <input id="wl-img-input" type="file" accept="image/*" style="display:none"/>
+    </div>
+
+    <button class="wl-reset" id="wl-reset-btn">↩ Réinitialiser le fond par défaut</button>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, query, orderByKey, limitToLast }
+import { getDatabase, ref, push, onValue, onDisconnect, set, remove, query, orderByKey, limitToLast }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-/* ── Firebase init ── */
 const firebaseConfig = {
   apiKey: "AIzaSyDyWu4TI4PIRXfeb7yqt0WIGClgu10IjkM",
   authDomain: "kylita-f2923.firebaseapp.com",
@@ -488,74 +731,84 @@ const firebaseConfig = {
   projectId: "kylita-f2923",
   storageBucket: "kylita-f2923.firebasestorage.app",
   messagingSenderId: "431823530994",
-  appId: "1:431823530994:web:88a07e633751686e5ad96b",
-  measurementId: "G-F4LLNWQJ16"
+  appId: "1:431823530994:web:88a07e633751686e5ad96b"
 };
 const fbApp  = initializeApp(firebaseConfig);
 const db     = getDatabase(fbApp);
 
-/* ── Paths (tout sous kychat/) ── */
 const MSGS_REF   = ref(db, "kychat/messages");
 const ONLINE_REF = ref(db, "kychat/online");
 const TYPING_REF = ref(db, "kychat/typing");
 
-/* ── State ── */
+// TENOR GIF API KEY (free public demo key — replace with your own at https://tenor.com/developer/keyregistration)
+const TENOR_KEY  = "AIzaSyAyimkuBNAVHnZ4tcmu0SHKfKUNBjKb1Ac";
+
 let myPseudo    = localStorage.getItem("kychat_pseudo") || null;
 let myOnlineRef = null;
 let myTypingRef = null;
 let typingTimer = null;
 let lastDateLabel = "";
+let sidebarOpen = true;
+let gifDebounce = null;
 
-/* ── Couleur avatar déterministe ── */
-const AVATAR_COLORS = [
-  "#7c3aed","#0891b2","#059669","#d97706",
-  "#dc2626","#db2777","#4f46e5","#0d9488"
-];
+/* ── AVATAR ── */
+const AVATAR_COLORS = ["#7c3aed","#0891b2","#059669","#d97706","#dc2626","#db2777","#4f46e5","#0d9488"];
 function pseudoColor(name) {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
-function initials(name) {
-  return name.slice(0,2).toUpperCase();
-}
+function initials(name) { return name.slice(0,2).toUpperCase(); }
 function avatarHTML(name, size=34) {
   const c = pseudoColor(name);
   return `<div class="avatar" style="background:${c};width:${size}px;height:${size}px;font-size:${size*.3}px">${initials(name)}</div>`;
 }
 
-/* ── Emojis ── */
-const EMOJIS = ["😀","😂","😍","🥰","😎","🤔","😅","🤣","😭","😤",
-                "🔥","❤️","👍","👏","🎉","💯","✨","😱","🙏","🤝",
-                "💀","😏","🥲","😬","🫡","💬","🚀","👀","💪","🎮"];
-
 /* ── DOM ── */
-const splash      = document.getElementById("splash");
-const appEl       = document.getElementById("app");
-const pseudoInput = document.getElementById("pseudo-input");
-const pseudoErr   = document.getElementById("pseudo-error");
-const joinBtn     = document.getElementById("join-btn");
-const msgsWrap    = document.getElementById("messages-wrap");
-const msgInput    = document.getElementById("msg-input");
-const sendBtn     = document.getElementById("send-btn");
-const imgBtn      = document.getElementById("img-btn");
-const imgInput    = document.getElementById("img-input");
-const emojiToggle = document.getElementById("emoji-toggle-btn");
-const emojiPanel  = document.getElementById("emoji-panel");
-const typingBar   = document.getElementById("typing-bar");
-const onlineCount = document.getElementById("online-count");
-const userChip    = document.getElementById("user-chip");
-const lightbox    = document.getElementById("lightbox");
-const lightboxImg = document.getElementById("lightbox-img");
+const splash        = document.getElementById("splash");
+const appEl         = document.getElementById("app");
+const pseudoInput   = document.getElementById("pseudo-input");
+const pseudoErr     = document.getElementById("pseudo-error");
+const joinBtn       = document.getElementById("join-btn");
+const msgsWrap      = document.getElementById("messages-wrap");
+const msgInput      = document.getElementById("msg-input");
+const sendBtn       = document.getElementById("send-btn");
+const imgBtn        = document.getElementById("img-btn");
+const imgInput      = document.getElementById("img-input");
+const emojiToggle   = document.getElementById("emoji-toggle-btn");
+const emojiPanel    = document.getElementById("emoji-panel");
+const gifToggle     = document.getElementById("gif-toggle-btn");
+const gifPanel      = document.getElementById("gif-panel");
+const gifSearch     = document.getElementById("gif-search");
+const gifGrid       = document.getElementById("gif-grid");
+const gifLoading    = document.getElementById("gif-loading");
+const typingBar     = document.getElementById("typing-bar");
+const onlineCount   = document.getElementById("online-count");
+const userChip      = document.getElementById("user-chip");
+const lightbox      = document.getElementById("lightbox");
+const lightboxImg   = document.getElementById("lightbox-img");
+const sidebarEl     = document.getElementById("sidebar");
+const sidebarList   = document.getElementById("sidebar-list");
+const onlineBadgeBtn= document.getElementById("online-badge-btn");
+const wallpaperBtn  = document.getElementById("wallpaper-btn");
+const wallpaperModal= document.getElementById("wallpaper-modal");
+const wlClose       = document.getElementById("wallpaper-modal-close");
+const wlUploadBtn   = document.getElementById("wl-upload-btn");
+const wlImgInput    = document.getElementById("wl-img-input");
+const wlResetBtn    = document.getElementById("wl-reset-btn");
+const colorPalette  = document.getElementById("color-palette");
+const pseudoModal   = document.getElementById("pseudo-modal");
+const pseudoModalClose = document.getElementById("pseudo-modal-close");
+const newPseudoInput= document.getElementById("new-pseudo-input");
+const newPseudoErr  = document.getElementById("new-pseudo-error");
+const pseudoSaveBtn = document.getElementById("pseudo-save-btn");
 
-/* ── Build emoji panel ── */
+/* ── EMOJIS ── */
+const EMOJIS = ["😀","😂","😍","🥰","😎","🤔","😅","🤣","😭","😤","🔥","❤️","👍","👏","🎉","💯","✨","😱","🙏","🤝","💀","😏","🥲","😬","🫡","💬","🚀","👀","💪","🎮"];
 EMOJIS.forEach(e => {
   const btn = document.createElement("button");
   btn.className = "emoji-btn"; btn.textContent = e;
-  btn.addEventListener("click", () => {
-    insertAtCursor(e);
-    msgInput.focus();
-  });
+  btn.addEventListener("click", () => { insertAtCursor(e); msgInput.focus(); });
   emojiPanel.appendChild(btn);
 });
 
@@ -566,26 +819,77 @@ function insertAtCursor(text) {
   autoResize();
 }
 
-emojiToggle.addEventListener("click", () => {
+emojiToggle.addEventListener("click", (e) => {
+  e.stopPropagation();
+  gifPanel.classList.remove("open");
   emojiPanel.classList.toggle("open");
 });
-document.addEventListener("click", e => {
-  if (!emojiPanel.contains(e.target) && e.target !== emojiToggle) {
-    emojiPanel.classList.remove("open");
-  }
+
+/* ── GIF PANEL ── */
+gifToggle.addEventListener("click", (e) => {
+  e.stopPropagation();
+  emojiPanel.classList.remove("open");
+  const opening = !gifPanel.classList.contains("open");
+  gifPanel.classList.toggle("open");
+  if (opening && gifGrid.children.length === 0) loadGifs("trending");
 });
 
-/* ── Auto-resize textarea ── */
+document.addEventListener("click", e => {
+  if (!emojiPanel.contains(e.target) && e.target !== emojiToggle) emojiPanel.classList.remove("open");
+  if (!gifPanel.contains(e.target) && e.target !== gifToggle) gifPanel.classList.remove("open");
+});
+
+async function loadGifs(searchTerm) {
+  gifGrid.innerHTML = "";
+  gifLoading.style.display = "block";
+  try {
+    const isTrending = searchTerm === "trending";
+    const endpoint = isTrending
+      ? `https://tenor.googleapis.com/v2/featured?key=${TENOR_KEY}&limit=18&media_filter=gif`
+      : `https://tenor.googleapis.com/v2/search?key=${TENOR_KEY}&q=${encodeURIComponent(searchTerm)}&limit=18&media_filter=gif`;
+    const res  = await fetch(endpoint);
+    const data = await res.json();
+    gifLoading.style.display = "none";
+    if (!data.results || data.results.length === 0) {
+      gifGrid.innerHTML = `<div style="color:var(--muted);font-size:.8rem;grid-column:span 3;text-align:center;padding:10px">Aucun GIF trouvé</div>`;
+      return;
+    }
+    data.results.forEach(r => {
+      const url = r.media_formats?.tinygif?.url || r.media_formats?.gif?.url;
+      if (!url) return;
+      const img = document.createElement("img");
+      img.src = url; img.className = "gif-item"; img.loading = "lazy";
+      img.addEventListener("click", () => sendGif(url));
+      gifGrid.appendChild(img);
+    });
+  } catch {
+    gifLoading.style.display = "none";
+    gifGrid.innerHTML = `<div style="color:var(--danger);font-size:.8rem;grid-column:span 3;text-align:center;padding:10px">Erreur de chargement</div>`;
+  }
+}
+
+function sendGif(url) {
+  if (!myPseudo) return;
+  push(MSGS_REF, { pseudo: myPseudo, type: "gif", dataUrl: url, ts: Date.now() });
+  gifPanel.classList.remove("open");
+}
+
+gifSearch.addEventListener("input", () => {
+  clearTimeout(gifDebounce);
+  const q = gifSearch.value.trim();
+  gifDebounce = setTimeout(() => loadGifs(q || "trending"), 400);
+});
+
+/* ── AUTO-RESIZE ── */
 function autoResize() {
   msgInput.style.height = "auto";
   msgInput.style.height = Math.min(msgInput.scrollHeight, 120) + "px";
 }
 msgInput.addEventListener("input", autoResize);
 
-/* ── Formatage date/heure ── */
+/* ── FORMAT ── */
 function fmtTime(ts) {
-  const d = new Date(ts);
-  return d.toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
+  return new Date(ts).toLocaleTimeString("fr-FR", { hour:"2-digit", minute:"2-digit" });
 }
 function fmtDateLabel(ts) {
   const d = new Date(ts);
@@ -596,22 +900,21 @@ function fmtDateLabel(ts) {
   return d.toLocaleDateString("fr-FR", { weekday:"long", day:"numeric", month:"long" });
 }
 
-/* ── Scroll to bottom ── */
+/* ── SCROLL ── */
 function scrollBottom(force=false) {
   const el = msgsWrap;
-  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 140;
   if (atBottom || force) el.scrollTop = el.scrollHeight;
 }
 
-/* ── Render message ── */
+/* ── RENDER MSG ── */
 let shownKeys = new Set();
-function renderMsg(key, data) {
+function renderMsg(key, data, scrollForce=false) {
   if (shownKeys.has(key)) return;
   shownKeys.add(key);
 
-  const ts   = data.ts   || Date.now();
+  const ts = data.ts || Date.now();
   const dateLabel = fmtDateLabel(ts);
-
   if (dateLabel !== lastDateLabel) {
     lastDateLabel = dateLabel;
     const sep = document.createElement("div");
@@ -620,23 +923,23 @@ function renderMsg(key, data) {
     msgsWrap.appendChild(sep);
   }
 
-  // Système
   if (data.type === "system") {
     const d = document.createElement("div");
-    d.className = "sys-msg";
-    d.textContent = data.text;
+    d.className = "sys-msg"; d.textContent = data.text;
     msgsWrap.appendChild(d);
-    scrollBottom();
+    scrollBottom(scrollForce);
     return;
   }
 
   const isMe = data.pseudo === myPseudo;
-  const row  = document.createElement("div");
+  const row = document.createElement("div");
   row.className = `msg-row ${isMe ? "me" : ""}`;
 
   let contentHTML = "";
   if (data.type === "image" && data.dataUrl) {
     contentHTML = `<img class="msg-img" src="${data.dataUrl}" alt="image" loading="lazy"/>`;
+  } else if (data.type === "gif" && data.dataUrl) {
+    contentHTML = `<img class="msg-gif" src="${data.dataUrl}" alt="GIF" loading="lazy"/>`;
   } else {
     contentHTML = escapeHtml(data.text || "");
   }
@@ -652,17 +955,15 @@ function renderMsg(key, data) {
     </div>
   `;
 
-  // Lightbox sur images
-  const img = row.querySelector(".msg-img");
-  if (img) {
+  row.querySelectorAll(".msg-img, .msg-gif").forEach(img => {
     img.addEventListener("click", () => {
       lightboxImg.src = img.src;
       lightbox.classList.add("open");
     });
-  }
+  });
 
   msgsWrap.appendChild(row);
-  scrollBottom();
+  scrollBottom(scrollForce);
 }
 
 function escapeHtml(s) {
@@ -673,18 +974,23 @@ function escapeHtml(s) {
 
 lightbox.addEventListener("click", () => lightbox.classList.remove("open"));
 
-/* ── Connexion Firebase messages (50 derniers) ── */
+/* ── LISTEN MESSAGES ── */
+let initialLoad = true;
 function listenMessages() {
   const q = query(MSGS_REF, orderByKey(), limitToLast(100));
   onValue(q, snap => {
     const msgs = snap.val() || {};
-    Object.entries(msgs)
-      .sort(([a],[b]) => a<b?-1:1)
-      .forEach(([k,v]) => renderMsg(k,v));
+    const entries = Object.entries(msgs).sort(([a],[b]) => a<b?-1:1);
+    entries.forEach(([k,v]) => renderMsg(k, v, initialLoad));
+    if (initialLoad) {
+      // Scroll to very bottom on first load
+      setTimeout(() => { msgsWrap.scrollTop = msgsWrap.scrollHeight; }, 80);
+      initialLoad = false;
+    }
   });
 }
 
-/* ── Online presence ── */
+/* ── PRESENCE ── */
 function setupPresence() {
   myOnlineRef = ref(db, `kychat/online/${myPseudo}`);
   set(myOnlineRef, { pseudo: myPseudo, joinedAt: Date.now() });
@@ -692,12 +998,26 @@ function setupPresence() {
 
   onValue(ONLINE_REF, snap => {
     const users = snap.val() || {};
-    const list = Object.keys(users);
+    const list = Object.values(users);
     onlineCount.textContent = list.length;
+
+    // Update sidebar
+    sidebarList.innerHTML = "";
+    list.sort((a,b) => (a.pseudo||"").localeCompare(b.pseudo||"")).forEach(u => {
+      const div = document.createElement("div");
+      div.className = "sidebar-user";
+      const isMe = u.pseudo === myPseudo;
+      div.innerHTML = `
+        <span class="s-dot"></span>
+        <span class="s-name">${escapeHtml(u.pseudo || "")}</span>
+        ${isMe ? '<span class="s-you">toi</span>' : ''}
+      `;
+      sidebarList.appendChild(div);
+    });
   });
 }
 
-/* ── Typing ── */
+/* ── TYPING ── */
 function setTyping(val) {
   if (!myPseudo) return;
   myTypingRef = ref(db, `kychat/typing/${myPseudo}`);
@@ -707,89 +1027,172 @@ function setTyping(val) {
 
 onValue(TYPING_REF, snap => {
   const typers = snap.val() || {};
-  const others = Object.values(typers)
-    .map(v => v.pseudo)
-    .filter(p => p !== myPseudo);
-  if (others.length === 0) typingBar.textContent = "";
+  const others = Object.values(typers).map(v => v.pseudo).filter(p => p !== myPseudo);
+  if (!others.length) typingBar.textContent = "";
   else if (others.length === 1) typingBar.textContent = `${others[0]} est en train d'écrire…`;
   else typingBar.textContent = `${others.slice(0,-1).join(", ")} et ${others.at(-1)} écrivent…`;
 });
 
 msgInput.addEventListener("input", () => {
-  if (typingTimer) clearTimeout(typingTimer);
+  clearTimeout(typingTimer);
   setTyping(true);
   typingTimer = setTimeout(() => setTyping(false), 2000);
 });
 
-/* ── Envoi message texte ── */
+/* ── SEND TEXT ── */
 function sendText() {
   const text = msgInput.value.trim();
   if (!text) return;
-  push(MSGS_REF, {
-    pseudo: myPseudo,
-    text,
-    type: "text",
-    ts: Date.now()
-  });
+  push(MSGS_REF, { pseudo: myPseudo, text, type: "text", ts: Date.now() });
   msgInput.value = "";
   msgInput.style.height = "auto";
   setTyping(false);
-  if (typingTimer) clearTimeout(typingTimer);
+  clearTimeout(typingTimer);
 }
-
 sendBtn.addEventListener("click", sendText);
 msgInput.addEventListener("keydown", e => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    sendText();
-  }
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendText(); }
 });
 
-/* ── Envoi image (base64) ── */
+/* ── SEND IMAGE ── */
 imgBtn.addEventListener("click", () => imgInput.click());
 imgInput.addEventListener("change", () => {
   const file = imgInput.files[0];
   if (!file) return;
-  if (file.size > 3 * 1024 * 1024) {
-    alert("Image trop grande (max 3 Mo)"); return;
-  }
+  if (file.size > 3 * 1024 * 1024) { alert("Image trop grande (max 3 Mo)"); return; }
   const reader = new FileReader();
-  reader.onload = e => {
-    push(MSGS_REF, {
-      pseudo: myPseudo,
-      type: "image",
-      dataUrl: e.target.result,
-      ts: Date.now()
-    });
-  };
+  reader.onload = e => push(MSGS_REF, { pseudo: myPseudo, type: "image", dataUrl: e.target.result, ts: Date.now() });
   reader.readAsDataURL(file);
   imgInput.value = "";
 });
 
-/* ── Join ── */
+/* ── SIDEBAR TOGGLE ── */
+onlineBadgeBtn.addEventListener("click", () => {
+  sidebarOpen = !sidebarOpen;
+  sidebarEl.classList.toggle("closed", !sidebarOpen);
+});
+
+/* ── WALLPAPER ── */
+const BG_COLORS = [
+  "#0d0f14","#1a1034","#0e1f2b","#0f1f17","#1f1010",
+  "#1a1020","#2a1f0e","#0e1520","#1c1c1c","#101820",
+  "#1e0e2a","#0a1a10","#1f1505","#0a1828","#1a0f14"
+];
+
+BG_COLORS.forEach(c => {
+  const sw = document.createElement("div");
+  sw.className = "color-swatch";
+  sw.style.background = c;
+  sw.title = c;
+  sw.addEventListener("click", () => {
+    document.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("active"));
+    sw.classList.add("active");
+    applyBg({ type: "color", value: c });
+    localStorage.setItem("kychat_bg", JSON.stringify({ type: "color", value: c }));
+  });
+  colorPalette.appendChild(sw);
+});
+
+function applyBg(bg) {
+  if (!bg) { msgsWrap.style.background = ""; msgsWrap.classList.remove("custom-bg"); return; }
+  if (bg.type === "color") {
+    msgsWrap.style.background = bg.value;
+    msgsWrap.style.backgroundImage = "";
+    msgsWrap.classList.remove("custom-bg");
+  } else if (bg.type === "image") {
+    msgsWrap.style.backgroundImage = `url(${bg.value})`;
+    msgsWrap.style.backgroundSize = "cover";
+    msgsWrap.style.backgroundPosition = "center";
+    msgsWrap.classList.add("custom-bg");
+  }
+}
+
+// Restore saved bg
+const savedBg = localStorage.getItem("kychat_bg");
+if (savedBg) { try { applyBg(JSON.parse(savedBg)); } catch {} }
+
+wallpaperBtn.addEventListener("click", () => wallpaperModal.classList.add("open"));
+wlClose.addEventListener("click", () => wallpaperModal.classList.remove("open"));
+wallpaperModal.addEventListener("click", e => { if (e.target === wallpaperModal) wallpaperModal.classList.remove("open"); });
+
+wlUploadBtn.addEventListener("click", () => wlImgInput.click());
+wlImgInput.addEventListener("change", () => {
+  const file = wlImgInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const bg = { type: "image", value: e.target.result };
+    applyBg(bg);
+    localStorage.setItem("kychat_bg", JSON.stringify(bg));
+    wallpaperModal.classList.remove("open");
+  };
+  reader.readAsDataURL(file);
+  wlImgInput.value = "";
+});
+
+wlResetBtn.addEventListener("click", () => {
+  applyBg(null);
+  localStorage.removeItem("kychat_bg");
+  document.querySelectorAll(".color-swatch").forEach(s => s.classList.remove("active"));
+  wallpaperModal.classList.remove("open");
+});
+
+/* ── CHANGE PSEUDO ── */
+userChip.addEventListener("click", () => {
+  newPseudoInput.value = myPseudo || "";
+  newPseudoErr.textContent = "";
+  pseudoModal.classList.add("open");
+  setTimeout(() => newPseudoInput.focus(), 100);
+});
+pseudoModalClose.addEventListener("click", () => pseudoModal.classList.remove("open"));
+pseudoModal.addEventListener("click", e => { if (e.target === pseudoModal) pseudoModal.classList.remove("open"); });
+
+pseudoSaveBtn.addEventListener("click", () => {
+  const p = newPseudoInput.value.trim();
+  if (!p || p.length < 2) { newPseudoErr.textContent = "Pseudo trop court (min 2 caractères)"; return; }
+  if (!/^[\w\-. éàèùâêîôûçœ]+$/i.test(p)) { newPseudoErr.textContent = "Pseudo invalide (lettres, chiffres, tirets)"; return; }
+  if (p === myPseudo) { pseudoModal.classList.remove("open"); return; }
+
+  const oldPseudo = myPseudo;
+  // Remove old presence
+  if (myOnlineRef) remove(myOnlineRef);
+
+  myPseudo = p;
+  localStorage.setItem("kychat_pseudo", p);
+
+  // Update chip
+  userChip.innerHTML = `${avatarHTML(p, 28)}<span>${escapeHtml(p)}</span>`;
+
+  // New presence
+  myOnlineRef = ref(db, `kychat/online/${p}`);
+  set(myOnlineRef, { pseudo: p, joinedAt: Date.now() });
+  onDisconnect(myOnlineRef).remove();
+
+  // System message
+  push(MSGS_REF, {
+    pseudo: "Système",
+    text: `${oldPseudo} a changé de pseudo → ${p} ✏️`,
+    type: "system",
+    ts: Date.now()
+  });
+
+  pseudoModal.classList.remove("open");
+});
+newPseudoInput.addEventListener("keydown", e => { if (e.key === "Enter") pseudoSaveBtn.click(); });
+
+/* ── JOIN ── */
 function joinChat(pseudo) {
   myPseudo = pseudo;
   localStorage.setItem("kychat_pseudo", pseudo);
-
-  // UI
   userChip.innerHTML = `${avatarHTML(pseudo, 28)}<span>${escapeHtml(pseudo)}</span>`;
   splash.classList.add("hidden");
   appEl.classList.add("visible");
   msgInput.focus();
-
   setupPresence();
   listenMessages();
-
-  // Message système de join
-  push(MSGS_REF, {
-    pseudo: "Système",
-    text: `${pseudo} a rejoint le chat ✨`,
-    type: "system",
-    ts: Date.now()
-  });
+  push(MSGS_REF, { pseudo: "Système", text: `${pseudo} a rejoint le chat ✨`, type: "system", ts: Date.now() });
 }
 
-/* ── Si pseudo déjà stocké → direct ── */
 if (myPseudo) {
   joinChat(myPseudo);
 } else {
@@ -798,21 +1201,12 @@ if (myPseudo) {
 
 joinBtn.addEventListener("click", () => {
   const p = pseudoInput.value.trim();
-  if (!p || p.length < 2) {
-    pseudoErr.textContent = "Pseudo trop court (min 2 caractères)";
-    return;
-  }
-  if (!/^[\w\-. éàèùâêîôûçœ]+$/i.test(p)) {
-    pseudoErr.textContent = "Pseudo invalide (lettres, chiffres, tirets)";
-    return;
-  }
+  if (!p || p.length < 2) { pseudoErr.textContent = "Pseudo trop court (min 2 caractères)"; return; }
+  if (!/^[\w\-. éàèùâêîôûçœ]+$/i.test(p)) { pseudoErr.textContent = "Pseudo invalide (lettres, chiffres, tirets)"; return; }
   pseudoErr.textContent = "";
   joinChat(p);
 });
-
-pseudoInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") joinBtn.click();
-});
+pseudoInput.addEventListener("keydown", e => { if (e.key === "Enter") joinBtn.click(); });
 </script>
 </body>
 </html>
