@@ -540,6 +540,7 @@
   #pseudo-modal .modal-box { }
 
   /* ── CREATE STICKER MODAL ── */
+  .sticker-modal-box { width: min(420px, 92vw); }
   .sticker-preview-wrap {
     display: flex; align-items: center; justify-content: center;
     background: var(--card); border: 1.5px dashed var(--border);
@@ -554,6 +555,38 @@
   }
   .sticker-hint {
     font-size: .76rem; color: var(--muted); margin-top: 6px; line-height: 1.4;
+  }
+  .sticker-edit-toolbar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .sticker-tool-btn {
+    border: 1.5px solid var(--border); background: var(--card); color: var(--text);
+    border-radius: 10px; padding: 7px 12px; font-size: .82rem; font-weight: 600;
+    cursor: pointer; font-family: var(--font); transition: border-color .15s, background .15s;
+  }
+  .sticker-tool-btn:hover { border-color: var(--accent); }
+  .sticker-tool-btn.active {
+    border-color: var(--accent); background: rgba(167,139,250,.15); color: var(--accent);
+  }
+  .sticker-brush-control {
+    display: flex; align-items: center; gap: 6px; font-size: .76rem; color: var(--muted);
+    margin-left: auto;
+  }
+  .sticker-brush-control input[type="range"] {
+    width: 90px; accent-color: var(--accent);
+  }
+  .sticker-canvas-wrap {
+    background:
+      linear-gradient(45deg, #2a2d3e 25%, transparent 25%, transparent 75%, #2a2d3e 75%) 0 0/16px 16px,
+      linear-gradient(45deg, #2a2d3e 25%, #15171f 25%, #15171f 75%, #2a2d3e 75%) 8px 8px/16px 16px;
+    border: 1.5px solid var(--border); border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    height: 280px; overflow: hidden; touch-action: none;
+  }
+  #sticker-canvas {
+    cursor: crosshair; max-width: 100%; max-height: 100%;
+    image-rendering: pixelated;
   }
 
   /* ── WALLPAPER MODAL ── */
@@ -822,17 +855,34 @@
 
 <!-- CREATE STICKER MODAL -->
 <div class="modal-overlay" id="sticker-create-modal">
-  <div class="modal-box">
+  <div class="modal-box sticker-modal-box">
     <button class="modal-close" id="sticker-create-close">✕</button>
     <div class="modal-title">Créer un sticker</div>
 
-    <div class="sticker-preview-wrap" id="sticker-preview-wrap">
-      <span class="sticker-preview-placeholder" id="sticker-preview-placeholder">Aucune image choisie</span>
-      <img id="sticker-preview-img" style="display:none" alt="aperçu"/>
+    <div id="sticker-step-pick">
+      <div class="sticker-preview-wrap" id="sticker-preview-wrap">
+        <span class="sticker-preview-placeholder" id="sticker-preview-placeholder">Aucune image choisie</span>
+      </div>
+      <button class="wl-btn" id="sticker-pick-btn">📂 Choisir une image</button>
+      <input id="sticker-img-input" type="file" accept="image/*" style="display:none"/>
+      <div class="sticker-hint">Étape suivante : tu pourras détourer le fond avant de valider.</div>
     </div>
-    <button class="wl-btn" id="sticker-pick-btn">📂 Choisir une image</button>
-    <input id="sticker-img-input" type="file" accept="image/*" style="display:none"/>
-    <div class="sticker-hint">PNG avec fond transparent recommandé. L'image sera recadrée en carré. Visible par tout le monde dans le chat.</div>
+
+    <div id="sticker-step-edit" style="display:none">
+      <div class="sticker-edit-toolbar">
+        <button class="sticker-tool-btn active" id="sticker-tool-erase" type="button">🧽 Gommer</button>
+        <button class="sticker-tool-btn" id="sticker-tool-restore" type="button">↩️ Restaurer</button>
+        <div class="sticker-brush-control">
+          <span>Taille</span>
+          <input type="range" id="sticker-brush-size" min="6" max="60" value="22"/>
+        </div>
+      </div>
+      <div class="sticker-canvas-wrap" id="sticker-canvas-wrap">
+        <canvas id="sticker-canvas" width="280" height="280"></canvas>
+      </div>
+      <div class="sticker-hint">Dessine sur le fond à supprimer pour le rendre transparent. Utilise "Restaurer" pour corriger une erreur. Zoom avec la molette / pincement.</div>
+      <button class="wl-btn" id="sticker-redo-pick-btn">📂 Changer d'image</button>
+    </div>
 
     <label class="field-label" for="sticker-name-input" style="margin-top:14px">Nom du sticker</label>
     <input id="sticker-name-input" class="field-input" type="text"
@@ -866,11 +916,11 @@ const TYPING_REF    = ref(db, "kychat/typing");
 const WALLPAPER_REF = ref(db, "kychat/wallpaper");
 const STICKERS_REF  = ref(db, "kychat/stickers");
 
-// TENOR GIF API key — using Tenor's official public demo key (v2 API).
-// If GIFs ever stop loading again, get a free key at https://tenor.com/developer/keyregistration
-// and replace the value below.
-const TENOR_KEY  = "AIzaSyAyimkuBNAVHnZ4tcmu0SHKfKUNBjKb1Ac";
-const TENOR_CLIENT_KEY = "kychat_app";
+// GIF search via GIPHY's public API.
+// Note: Google is shutting down the Tenor API entirely (no new keys issued since Jan 2026,
+// existing keys die June 30 2026), so this uses GIPHY's official public beta key instead.
+// For production use, get your own free key at https://developers.giphy.com/
+const GIPHY_KEY = "dc6zaTOxFJmzC";
 
 let myPseudo    = localStorage.getItem("kychat_pseudo") || null;
 let myOnlineRef = null;
@@ -880,7 +930,6 @@ let lastDateLabel = "";
 let sidebarOpen = true;
 let gifDebounce = null;
 let stickersCache = {};
-let pendingStickerDataUrl = null;
 
 /* ── AVATAR ── */
 const AVATAR_COLORS = ["#7c3aed","#0891b2","#059669","#d97706","#dc2626","#db2777","#4f46e5","#0d9488"];
@@ -919,11 +968,18 @@ const stickerGrid   = document.getElementById("sticker-grid");
 const stickerCreateOpenBtn = document.getElementById("sticker-create-open-btn");
 const stickerCreateModal   = document.getElementById("sticker-create-modal");
 const stickerCreateClose   = document.getElementById("sticker-create-close");
+const stickerStepPick      = document.getElementById("sticker-step-pick");
+const stickerStepEdit      = document.getElementById("sticker-step-edit");
 const stickerPickBtn       = document.getElementById("sticker-pick-btn");
+const stickerRedoPickBtn   = document.getElementById("sticker-redo-pick-btn");
 const stickerImgInput      = document.getElementById("sticker-img-input");
 const stickerPreviewWrap   = document.getElementById("sticker-preview-wrap");
-const stickerPreviewImg    = document.getElementById("sticker-preview-img");
 const stickerPreviewPlaceholder = document.getElementById("sticker-preview-placeholder");
+const stickerCanvasWrap    = document.getElementById("sticker-canvas-wrap");
+const stickerCanvas        = document.getElementById("sticker-canvas");
+const stickerToolErase     = document.getElementById("sticker-tool-erase");
+const stickerToolRestore   = document.getElementById("sticker-tool-restore");
+const stickerBrushSize     = document.getElementById("sticker-brush-size");
 const stickerNameInput     = document.getElementById("sticker-name-input");
 const stickerCreateError   = document.getElementById("sticker-create-error");
 const stickerCreateSaveBtn = document.getElementById("sticker-create-save-btn");
@@ -1005,22 +1061,22 @@ async function loadGifs(searchTerm) {
   try {
     const isTrending = searchTerm === "trending";
     const endpoint = isTrending
-      ? `https://tenor.googleapis.com/v2/featured?key=${TENOR_KEY}&client_key=${TENOR_CLIENT_KEY}&limit=18&media_filter=tinygif,gif&contentfilter=medium`
-      : `https://tenor.googleapis.com/v2/search?key=${TENOR_KEY}&client_key=${TENOR_CLIENT_KEY}&q=${encodeURIComponent(searchTerm)}&limit=18&media_filter=tinygif,gif&contentfilter=medium`;
+      ? `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_KEY}&limit=18&rating=pg-13`
+      : `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(searchTerm)}&limit=18&rating=pg-13&lang=fr`;
     const res  = await fetch(endpoint);
     if (!res.ok) {
       let detail = "";
-      try { const j = await res.json(); detail = j?.error?.message || j?.error || ""; } catch {}
+      try { const j = await res.json(); detail = j?.meta?.msg || ""; } catch {}
       throw new Error(`HTTP ${res.status}${detail ? " — " + detail : ""}`);
     }
     const data = await res.json();
     gifLoading.style.display = "none";
-    if (!data.results || data.results.length === 0) {
+    if (!data.data || data.data.length === 0) {
       gifGrid.innerHTML = `<div style="color:var(--muted);font-size:.8rem;grid-column:span 3;text-align:center;padding:10px">Aucun GIF trouvé</div>`;
       return;
     }
-    data.results.forEach(r => {
-      const url = r.media_formats?.tinygif?.url || r.media_formats?.gif?.url || r.media_formats?.nanogif?.url;
+    data.data.forEach(r => {
+      const url = r.images?.fixed_width?.url || r.images?.downsized?.url || r.images?.original?.url;
       if (!url) return;
       const img = document.createElement("img");
       img.src = url; img.className = "gif-item"; img.loading = "lazy";
@@ -1080,10 +1136,24 @@ function sendSticker(s) {
   stickerPanel.classList.remove("open");
 }
 
-/* ── CREATE STICKER MODAL ── */
+/* ── CREATE STICKER MODAL: canvas eraser editor ── */
+let stickerOriginalImg = null;   // loaded Image() of the source picture
+let stickerBaseCanvas  = null;   // offscreen canvas holding the original square-fit pixels
+let stickerCtx         = null;   // visible canvas context
+let stickerTool        = "erase"; // "erase" | "restore"
+let stickerDrawing     = false;
+let stickerLastPt      = null;
+const STICKER_SIZE     = 280;    // working resolution (also export size)
+
 function openStickerCreateModal() {
-  pendingStickerDataUrl = null;
-  stickerPreviewImg.style.display = "none";
+  stickerOriginalImg = null;
+  stickerBaseCanvas = null;
+  stickerTool = "erase";
+  stickerToolErase.classList.add("active");
+  stickerToolRestore.classList.remove("active");
+  stickerBrushSize.value = 22;
+  stickerStepPick.style.display = "block";
+  stickerStepEdit.style.display = "none";
   stickerPreviewPlaceholder.style.display = "block";
   stickerNameInput.value = "";
   stickerCreateError.textContent = "";
@@ -1096,29 +1166,23 @@ stickerCreateOpenBtn.addEventListener("click", openStickerCreateModal);
 stickerCreateClose.addEventListener("click", () => stickerCreateModal.classList.remove("open"));
 stickerCreateModal.addEventListener("click", e => { if (e.target === stickerCreateModal) stickerCreateModal.classList.remove("open"); });
 
-stickerPickBtn.addEventListener("click", () => stickerImgInput.click());
+function pickStickerFile() { stickerImgInput.click(); }
+stickerPickBtn.addEventListener("click", pickStickerFile);
+stickerRedoPickBtn.addEventListener("click", pickStickerFile);
+
 stickerImgInput.addEventListener("change", () => {
   const file = stickerImgInput.files[0];
   if (!file) return;
-  if (file.size > 2 * 1024 * 1024) { stickerCreateError.textContent = "Image trop grande (max 2 Mo)"; return; }
+  if (file.size > 4 * 1024 * 1024) { stickerCreateError.textContent = "Image trop grande (max 4 Mo)"; return; }
+  stickerCreateError.textContent = "";
   const reader = new FileReader();
   reader.onload = e => {
-    // Crop to a square so all stickers render consistently
     const img = new Image();
     img.onload = () => {
-      const size = Math.min(img.width, img.height);
-      const canvas = document.createElement("canvas");
-      const target = 280;
-      canvas.width = target; canvas.height = target;
-      const ctx = canvas.getContext("2d");
-      const sx = (img.width - size) / 2;
-      const sy = (img.height - size) / 2;
-      ctx.drawImage(img, sx, sy, size, size, 0, 0, target, target);
-      pendingStickerDataUrl = canvas.toDataURL("image/png");
-      stickerPreviewImg.src = pendingStickerDataUrl;
-      stickerPreviewImg.style.display = "block";
-      stickerPreviewPlaceholder.style.display = "none";
-      stickerCreateError.textContent = "";
+      stickerOriginalImg = img;
+      setupStickerCanvas(img);
+      stickerStepPick.style.display = "none";
+      stickerStepEdit.style.display = "block";
     };
     img.src = e.target.result;
   };
@@ -1126,17 +1190,111 @@ stickerImgInput.addEventListener("change", () => {
   stickerImgInput.value = "";
 });
 
+function setupStickerCanvas(img) {
+  // Build an offscreen "base" canvas: image center-cropped to a square at working resolution.
+  stickerBaseCanvas = document.createElement("canvas");
+  stickerBaseCanvas.width = STICKER_SIZE;
+  stickerBaseCanvas.height = STICKER_SIZE;
+  const bctx = stickerBaseCanvas.getContext("2d");
+  const size = Math.min(img.width, img.height);
+  const sx = (img.width - size) / 2;
+  const sy = (img.height - size) / 2;
+  bctx.drawImage(img, sx, sy, size, size, 0, 0, STICKER_SIZE, STICKER_SIZE);
+
+  // Visible editable canvas starts as a copy of the base
+  stickerCanvas.width = STICKER_SIZE;
+  stickerCanvas.height = STICKER_SIZE;
+  stickerCtx = stickerCanvas.getContext("2d");
+  stickerCtx.drawImage(stickerBaseCanvas, 0, 0);
+}
+
+function canvasPointFromEvent(evt) {
+  const rect = stickerCanvas.getBoundingClientRect();
+  const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+  const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+  const x = (clientX - rect.left) * (stickerCanvas.width / rect.width);
+  const y = (clientY - rect.top) * (stickerCanvas.height / rect.height);
+  return { x, y };
+}
+
+function drawAtPoint(pt) {
+  const r = parseInt(stickerBrushSize.value, 10);
+  if (stickerTool === "erase") {
+    stickerCtx.save();
+    stickerCtx.globalCompositeOperation = "destination-out";
+    stickerCtx.beginPath();
+    stickerCtx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+    stickerCtx.fill();
+    stickerCtx.restore();
+  } else {
+    // restore: bring back original pixels in a circular region, clipped
+    stickerCtx.save();
+    stickerCtx.beginPath();
+    stickerCtx.arc(pt.x, pt.y, r, 0, Math.PI * 2);
+    stickerCtx.clip();
+    stickerCtx.clearRect(pt.x - r, pt.y - r, r * 2, r * 2);
+    stickerCtx.drawImage(stickerBaseCanvas, 0, 0);
+    stickerCtx.restore();
+  }
+}
+
+function strokeBetween(p0, p1) {
+  const dist = Math.hypot(p1.x - p0.x, p1.y - p0.y);
+  const steps = Math.max(1, Math.ceil(dist / 4));
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    drawAtPoint({ x: p0.x + (p1.x - p0.x) * t, y: p0.y + (p1.y - p0.y) * t });
+  }
+}
+
+function stickerPointerDown(evt) {
+  if (!stickerCtx) return;
+  evt.preventDefault();
+  stickerDrawing = true;
+  const pt = canvasPointFromEvent(evt);
+  stickerLastPt = pt;
+  drawAtPoint(pt);
+}
+function stickerPointerMove(evt) {
+  if (!stickerDrawing || !stickerCtx) return;
+  evt.preventDefault();
+  const pt = canvasPointFromEvent(evt);
+  strokeBetween(stickerLastPt, pt);
+  stickerLastPt = pt;
+}
+function stickerPointerUp() { stickerDrawing = false; stickerLastPt = null; }
+
+stickerCanvas.addEventListener("mousedown", stickerPointerDown);
+stickerCanvas.addEventListener("mousemove", stickerPointerMove);
+window.addEventListener("mouseup", stickerPointerUp);
+stickerCanvas.addEventListener("touchstart", stickerPointerDown, { passive: false });
+stickerCanvas.addEventListener("touchmove", stickerPointerMove, { passive: false });
+stickerCanvas.addEventListener("touchend", stickerPointerUp);
+
+stickerToolErase.addEventListener("click", () => {
+  stickerTool = "erase";
+  stickerToolErase.classList.add("active");
+  stickerToolRestore.classList.remove("active");
+});
+stickerToolRestore.addEventListener("click", () => {
+  stickerTool = "restore";
+  stickerToolRestore.classList.add("active");
+  stickerToolErase.classList.remove("active");
+});
+
 stickerCreateSaveBtn.addEventListener("click", () => {
   const name = stickerNameInput.value.trim();
-  if (!pendingStickerDataUrl) { stickerCreateError.textContent = "Choisis d'abord une image"; return; }
+  if (!stickerCtx) { stickerCreateError.textContent = "Choisis d'abord une image"; return; }
   if (!name || name.length < 2) { stickerCreateError.textContent = "Donne un nom au sticker (min 2 caractères)"; return; }
+
+  const finalDataUrl = stickerCanvas.toDataURL("image/png");
 
   stickerCreateSaveBtn.disabled = true;
   stickerCreateSaveBtn.textContent = "Ajout en cours…";
 
   push(STICKERS_REF, {
     name,
-    dataUrl: pendingStickerDataUrl,
+    dataUrl: finalDataUrl,
     createdBy: myPseudo,
     createdAt: Date.now()
   }).then(() => {
