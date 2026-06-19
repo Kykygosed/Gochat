@@ -89,11 +89,15 @@
   #sidebar-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
   .sidebar-user { display:flex; align-items:center; gap:10px; padding:8px 16px; font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .sidebar-user .s-dot { width:8px; height:8px; border-radius:50%; background:var(--online); flex-shrink:0; }
+  .sidebar-user .s-dot.offline { background:var(--muted); box-shadow:none; }
   .sidebar-user .s-name { overflow:hidden; text-overflow:ellipsis; color:var(--text); }
+  .sidebar-user.is-offline .s-name { color:var(--muted); }
   .sidebar-user .s-you { margin-left:auto; font-size:.7rem; color:var(--accent); font-weight:600; }
   .sidebar-user .s-muted-tag { margin-left:auto; font-size:.68rem; color:var(--warn); font-weight:600; background:rgba(251,146,60,.12); border-radius:4px; padding:1px 5px; }
+  .sidebar-user .s-offline-tag { margin-left:auto; font-size:.68rem; color:var(--muted); font-weight:600; background:rgba(100,116,139,.12); border-radius:4px; padding:1px 5px; }
   .sidebar-user .s-admin-btn { margin-left:4px; background:none; border:none; cursor:pointer; color:var(--muted); font-size:.75rem; padding:2px 4px; border-radius:4px; transition:background .15s,color .15s; }
   .sidebar-user .s-admin-btn:hover { background:rgba(248,113,113,.12); color:var(--danger); }
+  .sidebar-section-label { padding:10px 16px 4px; font-size:.68rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
 
   /* CHAT COLUMN */
   #chat-col { flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative; }
@@ -315,6 +319,7 @@
   .admin-user-row .aur-name { flex:1; font-size:.85rem; font-weight:500; }
   .admin-user-row .aur-status { font-size:.68rem; padding:2px 7px; border-radius:8px; font-weight:600; }
   .aur-status.online { background:rgba(34,197,94,.12); color:var(--online); }
+  .aur-status.offline { background:rgba(100,116,139,.12); color:var(--muted); }
   .aur-status.muted { background:rgba(251,146,60,.12); color:var(--warn); }
   .aur-status.banned { background:rgba(248,113,113,.12); color:var(--danger); }
   .admin-user-row .aur-actions { display:flex; gap:4px; }
@@ -623,9 +628,9 @@
       </div>
     </div>
 
-    <!-- Utilisateurs connectés -->
+    <!-- Utilisateurs -->
     <div class="admin-section">
-      <div class="admin-section-label">Utilisateurs connectés</div>
+      <div class="admin-section-label">Utilisateurs inscrits</div>
       <div class="admin-user-list" id="admin-user-list"></div>
     </div>
 
@@ -692,6 +697,7 @@ const db     = getDatabase(fbApp);
 
 const MSGS_REF       = ref(db, "kychat/messages");
 const ONLINE_REF     = ref(db, "kychat/online");
+const USERS_REF      = ref(db, "kychat/users");
 const TYPING_REF     = ref(db, "kychat/typing");
 const WALLPAPER_REF  = ref(db, "kychat/wallpaper");
 const STICKERS_REF   = ref(db, "kychat/stickers");
@@ -721,6 +727,7 @@ let bansCache = {};
 let mutesCache = {};
 let settingsCache = {};
 let onlineUsersCache = {};
+let registeredUsersCache = {}; // ALL users who have ever joined (kept even after disconnect)
 let pendingMuteTarget = null;
 let unreadWhileScrolled = 0;
 let pendingProfilePhoto = null; // base64 staged before save in pseudo modal
@@ -778,7 +785,7 @@ function avatarHTML(name, size=34, photoUrl=null) {
 }
 function getProfilePhoto(pseudo) {
   if (pseudo === myPseudo && myProfilePhoto) return myProfilePhoto;
-  const u = onlineUsersCache[pseudo];
+  const u = onlineUsersCache[pseudo] || registeredUsersCache[pseudo];
   return u && u.photo ? u.photo : null;
 }
 
@@ -1161,8 +1168,9 @@ onValue(BANS_REF, snap => {
     msgsWrap.innerHTML = `<div style="text-align:center;margin:auto;padding:40px 20px"><div style="font-size:2rem;margin-bottom:12px">🚫</div><div style="font-size:1.1rem;font-weight:700;color:var(--danger)">Tu as été banni de KyChat.</div><div style="font-size:.85rem;color:var(--muted);margin-top:8px">Contacte un administrateur pour faire appel.</div></div>`;
     msgInput.disabled = true; sendBtn.disabled = true;
   }
+  if (isAdmin) renderAdminUserList();
 });
-onValue(MUTES_REF, snap => { mutesCache = snap.val() || {}; updateMuteUI(); });
+onValue(MUTES_REF, snap => { mutesCache = snap.val() || {}; updateMuteUI(); if (isAdmin) renderAdminUserList(); });
 onValue(SETTINGS_REF, snap => {
   settingsCache = snap.val() || {};
   applyMaxPseudoLenToInputs();
@@ -1323,37 +1331,98 @@ function listenMessages() {
   });
 }
 
+/* REGISTERED USERS (persistent — kept even after the person disconnects) */
+function registerUser(pseudo, uid, photo) {
+  const userRef = ref(db, `kychat/users/${pseudo}`);
+  get(userRef).then(snap => {
+    const existing = snap.val();
+    if (existing) {
+      // Already registered: just refresh uid/photo/lastSeen, keep original firstJoinedAt
+      update(userRef, { uid, photo: photo || null, lastSeen: Date.now() });
+    } else {
+      set(userRef, { pseudo, uid, photo: photo || null, firstJoinedAt: Date.now(), lastSeen: Date.now() });
+    }
+  }).catch(() => {
+    // Fallback if get() fails for any reason — still record presence
+    update(userRef, { pseudo, uid, photo: photo || null, lastSeen: Date.now() });
+  });
+}
+
 /* PRESENCE */
 function setupPresence() {
   myOnlineRef = ref(db, `kychat/online/${myPseudo}`);
   set(myOnlineRef, { pseudo: myPseudo, uid: MY_ID, joinedAt: Date.now(), photo: myProfilePhoto || null });
   onDisconnect(myOnlineRef).remove();
+  registerUser(myPseudo, MY_ID, myProfilePhoto);
+
   onValue(ONLINE_REF, snap => {
-    const users = snap.val() || {};
-    onlineUsersCache = users;
-    const list = Object.values(users);
-    onlineCount.textContent = list.length;
-    sidebarList.innerHTML = "";
-    list.sort((a,b) => (a.pseudo||"").localeCompare(b.pseudo||"")).forEach(u => {
-      const isMuted = !!mutesCache[u.pseudo] && !isExpired(mutesCache[u.pseudo]);
-      const div = document.createElement("div");
-      div.className = "sidebar-user";
-      const isMe = u.pseudo === myPseudo;
-      div.innerHTML = `
-        ${avatarHTML(u.pseudo, 22, u.photo)}
-        <span class="s-name">${escapeHtml(u.pseudo||"")}</span>
-        ${isMe ? '<span class="s-you">toi</span>' : ""}
-        ${!isMe && isMuted ? '<span class="s-muted-tag">muté</span>' : ""}
-        ${isAdmin && !isMe ? `<button class="s-admin-btn" data-pseudo="${escapeHtml(u.pseudo)}" title="Actions admin">⚙</button>` : ""}
-      `;
-      const adminSideBtn = div.querySelector(".s-admin-btn");
-      if (adminSideBtn) adminSideBtn.addEventListener("click", () => openAdminPanelForUser(u.pseudo));
-      sidebarList.appendChild(div);
-    });
+    onlineUsersCache = snap.val() || {};
+    onlineCount.textContent = Object.values(onlineUsersCache).length;
+    renderSidebar();
+    if (isAdmin) renderAdminUserList();
+  });
+  onValue(USERS_REF, snap => {
+    registeredUsersCache = snap.val() || {};
+    renderSidebar();
     if (isAdmin) renderAdminUserList();
   });
 }
 function isExpired(rec) { return rec.until && Date.now() > rec.until; }
+
+/* Build the merged "all registered users" list, each flagged online/offline */
+function getAllUsersMerged() {
+  const merged = {};
+  Object.values(registeredUsersCache).forEach(u => {
+    if (!u || !u.pseudo) return;
+    merged[u.pseudo] = { pseudo: u.pseudo, uid: u.uid, photo: u.photo || null, online: false, joinedAt: u.firstJoinedAt || u.lastSeen || 0 };
+  });
+  Object.values(onlineUsersCache).forEach(u => {
+    if (!u || !u.pseudo) return;
+    if (!merged[u.pseudo]) merged[u.pseudo] = { pseudo: u.pseudo, uid: u.uid, photo: u.photo || null, online: true, joinedAt: u.joinedAt || 0 };
+    else { merged[u.pseudo].online = true; merged[u.pseudo].uid = u.uid; merged[u.pseudo].photo = u.photo || merged[u.pseudo].photo; }
+  });
+  return Object.values(merged);
+}
+
+function renderSidebar() {
+  const all = getAllUsersMerged();
+  const online = all.filter(u => u.online).sort((a,b) => a.pseudo.localeCompare(b.pseudo));
+  const offline = all.filter(u => !u.online).sort((a,b) => a.pseudo.localeCompare(b.pseudo));
+
+  sidebarList.innerHTML = "";
+
+  if (online.length) {
+    const lbl = document.createElement("div");
+    lbl.className = "sidebar-section-label"; lbl.textContent = `En ligne — ${online.length}`;
+    sidebarList.appendChild(lbl);
+    online.forEach(u => sidebarList.appendChild(buildSidebarRow(u)));
+  }
+  if (offline.length) {
+    const lbl = document.createElement("div");
+    lbl.className = "sidebar-section-label"; lbl.textContent = `Hors ligne — ${offline.length}`;
+    sidebarList.appendChild(lbl);
+    offline.forEach(u => sidebarList.appendChild(buildSidebarRow(u)));
+  }
+}
+
+function buildSidebarRow(u) {
+  const isMuted = !!mutesCache[u.pseudo] && !isExpired(mutesCache[u.pseudo]);
+  const isMe = u.pseudo === myPseudo;
+  const div = document.createElement("div");
+  div.className = "sidebar-user" + (u.online ? "" : " is-offline");
+  div.innerHTML = `
+    <span class="s-dot${u.online ? "" : " offline"}"></span>
+    ${avatarHTML(u.pseudo, 22, u.photo)}
+    <span class="s-name">${escapeHtml(u.pseudo||"")}</span>
+    ${isMe ? '<span class="s-you">toi</span>' : ""}
+    ${!isMe && isMuted ? '<span class="s-muted-tag">muté</span>' : ""}
+    ${!isMe && !u.online && !isMuted ? '<span class="s-offline-tag">hors ligne</span>' : ""}
+    ${isAdmin && !isMe ? `<button class="s-admin-btn" data-pseudo="${escapeHtml(u.pseudo)}" title="Actions admin">⚙</button>` : ""}
+  `;
+  const adminSideBtn = div.querySelector(".s-admin-btn");
+  if (adminSideBtn) adminSideBtn.addEventListener("click", () => openAdminPanelForUser(u.pseudo));
+  return div;
+}
 
 /* TYPING */
 function setTyping(val) {
@@ -1506,6 +1575,7 @@ function applyProfilePhotoChange() {
   if (myProfilePhoto) localStorage.setItem("kychat_photo", myProfilePhoto);
   else localStorage.removeItem("kychat_photo");
   if (myOnlineRef) update(myOnlineRef, { photo: myProfilePhoto || null });
+  if (myPseudo) update(ref(db, `kychat/users/${myPseudo}`), { photo: myProfilePhoto || null });
   stagedProfilePhoto = undefined;
 }
 
@@ -1537,6 +1607,7 @@ pseudoSaveBtn.addEventListener("click", () => {
   userChip.innerHTML = `${avatarHTML(p,28,myProfilePhoto)}<span>${escapeHtml(p)}</span>`;
   myOnlineRef = ref(db, `kychat/online/${p}`);
   set(myOnlineRef, { pseudo:p, uid:MY_ID, joinedAt:Date.now(), photo: myProfilePhoto || null }); onDisconnect(myOnlineRef).remove();
+  registerUser(p, MY_ID, myProfilePhoto);
   push(MSGS_REF, { pseudo:"Système", text:`${old} a changé de pseudo → ${p} ✏️`, type:"system", ts:Date.now() });
   pseudoModal.classList.remove("open");
 });
@@ -1590,6 +1661,7 @@ function showAdminUI() {
   lockStickersToggle.checked  = !!settingsCache.lockStickers;
   maxPseudoLenInput.value     = getMaxPseudoLen();
   renderStickerGrid(); // re-render with delete buttons
+  renderSidebar(); // re-render with admin ⚙ buttons
 }
 function hideAdminUI() { adminPanelBtn.style.display = "none"; }
 
@@ -1636,19 +1708,23 @@ maxPseudoLenInput.addEventListener("change", () => {
   update(SETTINGS_REF, { maxPseudoLen: v });
 });
 
-// Render user list in admin panel
+// Render user list in admin panel — now shows ALL registered users (online + offline)
 function renderAdminUserList() {
   adminUserList.innerHTML = "";
-  const online = Object.values(onlineUsersCache);
-  if (!online.length) { adminUserList.innerHTML = `<div style="font-size:.8rem;color:var(--muted);padding:8px">Aucun utilisateur connecté</div>`; return; }
-  online.sort((a,b) => (a.pseudo||"").localeCompare(b.pseudo||"")).forEach(u => {
-    if (u.pseudo === myPseudo) return;
+  const all = getAllUsersMerged().filter(u => u.pseudo !== myPseudo);
+  if (!all.length) { adminUserList.innerHTML = `<div style="font-size:.8rem;color:var(--muted);padding:8px">Aucun utilisateur inscrit</div>`; return; }
+  all.sort((a,b) => {
+    if (a.online !== b.online) return a.online ? -1 : 1; // online first
+    return a.pseudo.localeCompare(b.pseudo);
+  }).forEach(u => {
     const muted = mutesCache[u.pseudo] && !isExpired(mutesCache[u.pseudo]);
     const row = document.createElement("div");
     row.className = "admin-user-row";
+    const statusClass = muted ? "muted" : (u.online ? "online" : "offline");
+    const statusText  = muted ? "muté" : (u.online ? "en ligne" : "hors ligne");
     row.innerHTML = `
       <div class="aur-name">${escapeHtml(u.pseudo)}</div>
-      <span class="aur-status ${muted?"muted":"online"}">${muted?"muté":"en ligne"}</span>
+      <span class="aur-status ${statusClass}">${statusText}</span>
       <div class="aur-actions">
         ${muted
           ? `<button class="aur-btn unmute-btn" data-pseudo="${escapeHtml(u.pseudo)}">Démuter</button>`
@@ -1740,7 +1816,7 @@ adminLogoutBtn.addEventListener("click", () => {
   isAdmin = false; adminUser = "";
   localStorage.removeItem("kychat_admin");
   localStorage.removeItem("kychat_admin_user");
-  hideAdminUI(); renderStickerGrid();
+  hideAdminUI(); renderStickerGrid(); renderSidebar();
   adminPanelModal.classList.remove("open");
 });
 
