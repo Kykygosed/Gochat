@@ -93,7 +93,7 @@
   #sidebar-list { flex:1; overflow-y:auto; padding:8px 0; }
   #sidebar-list::-webkit-scrollbar { width:3px; }
   #sidebar-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-  .sidebar-user { display:flex; align-items:center; gap:10px; padding:8px 16px; font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sidebar-user { display:flex; align-items:center; gap:8px; padding:8px 16px; font-size:.85rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-wrap:wrap; }
   .sidebar-user .s-dot { width:8px; height:8px; border-radius:50%; background:var(--online); flex-shrink:0; }
   .sidebar-user .s-dot.offline { background:var(--muted); box-shadow:none; }
   .sidebar-user .s-name { overflow:hidden; text-overflow:ellipsis; color:var(--text); }
@@ -104,6 +104,14 @@
   .sidebar-user .s-admin-btn { margin-left:4px; background:none; border:none; cursor:pointer; color:var(--muted); font-size:.75rem; padding:2px 4px; border-radius:4px; transition:background .15s,color .15s; }
   .sidebar-user .s-admin-btn:hover { background:rgba(248,113,113,.12); color:var(--danger); }
   .sidebar-section-label { padding:10px 16px 4px; font-size:.68rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
+  .sidebar-user-row-wrap { display:flex; flex-direction:column; gap:1px; padding:1px 0; }
+  .sidebar-roles-row { display:flex; flex-wrap:wrap; gap:3px; padding:0 16px 4px 44px; }
+
+  /* ROLE TAG (used in sidebar + messages) */
+  .role-tag { display:inline-flex; align-items:center; gap:4px; border-radius:6px; padding:1px 7px 1px 4px; font-size:.66rem; font-weight:700; line-height:1.6; white-space:nowrap; border:1px solid rgba(255,255,255,.08); }
+  .role-tag .role-icon { width:13px; height:13px; border-radius:3px; object-fit:cover; flex-shrink:0; }
+  .role-tag .role-icon-fallback { width:13px; height:13px; border-radius:3px; flex-shrink:0; background:rgba(255,255,255,.25); }
+  .msg-roles-row { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
 
   /* CHAT COLUMN */
   #chat-col { flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative; }
@@ -137,7 +145,7 @@
   .avatar { width:34px; height:34px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:.78rem; font-weight:700; color:#fff; box-shadow:0 2px 8px rgba(0,0,0,.4); }
   .bubble-group { display:flex; flex-direction:column; gap:2px; max-width:min(72%,480px); }
   .msg-row.me .bubble-group { align-items:flex-end; }
-  .bubble-meta { display:flex; align-items:baseline; gap:8px; padding:0 4px; margin-bottom:3px; }
+  .bubble-meta { display:flex; align-items:center; gap:8px; padding:0 4px; margin-bottom:3px; flex-wrap:wrap; }
   .msg-row.me .bubble-meta { flex-direction:row-reverse; }
   .meta-name { font-size:.78rem; font-weight:600; color:var(--accent); }
   .msg-row.me .meta-name { color:#c4b5fd; }
@@ -301,6 +309,7 @@
   .call-video-tile video { width:100%; height:100%; object-fit:cover; display:block; background:#000; }
   .call-video-tile .tile-label { position:absolute; bottom:6px; left:8px; font-size:.7rem; font-weight:600; color:#fff; background:rgba(0,0,0,.55); border-radius:6px; padding:2px 7px; backdrop-filter:blur(4px); }
   .call-video-tile .tile-muted { position:absolute; top:6px; right:6px; font-size:.8rem; background:rgba(0,0,0,.5); border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; }
+  .call-video-tile .tile-state { position:absolute; bottom:6px; right:6px; font-size:.62rem; font-weight:700; color:#fff; background:rgba(0,0,0,.55); border-radius:6px; padding:2px 6px; letter-spacing:.04em; text-transform:uppercase; }
   .call-video-tile .cam-off-placeholder { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px; background:#0d1117; }
   .cam-off-avatar { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:700; color:#fff; }
   .cam-off-name { font-size:.72rem; color:var(--muted); }
@@ -382,13 +391,13 @@
   .text-pref-preview { background:var(--bubble-me); color:#f0ebff; padding:10px 14px; border-radius:16px; border-bottom-right-radius:4px; font-family:var(--msg-font); font-size:var(--msg-size); line-height:1.55; }
 
   /* ADMIN PANEL */
-  .admin-modal-box { width:min(540px,96vw); max-height:90vh; overflow-y:auto; }
+  .admin-modal-box { width:min(560px,96vw); max-height:90vh; overflow-y:auto; }
   .admin-modal-box::-webkit-scrollbar { width:4px; }
   .admin-modal-box::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
   .admin-title { font-size:1.1rem; font-weight:700; margin-bottom:4px; color:var(--warn); -webkit-text-fill-color:var(--warn); background:none; }
   .admin-subtitle { font-size:.78rem; color:var(--muted); margin-bottom:20px; }
   .admin-section { margin-bottom:20px; }
-  .admin-section-label { font-size:.72rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+  .admin-section-label { font-size:.72rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .admin-toggle-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.03); }
   .admin-toggle-label { font-size:.88rem; }
   .admin-toggle-desc { font-size:.72rem; color:var(--muted); margin-top:2px; }
@@ -401,14 +410,14 @@
   .admin-user-list { display:flex; flex-direction:column; gap:4px; max-height:200px; overflow-y:auto; }
   .admin-user-list::-webkit-scrollbar { width:3px; }
   .admin-user-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-  .admin-user-row { display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--card); border:1px solid var(--border); border-radius:10px; }
-  .admin-user-row .aur-name { flex:1; font-size:.85rem; font-weight:500; }
+  .admin-user-row { display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--card); border:1px solid var(--border); border-radius:10px; flex-wrap:wrap; }
+  .admin-user-row .aur-name { flex:1; font-size:.85rem; font-weight:500; min-width:60px; }
   .admin-user-row .aur-status { font-size:.68rem; padding:2px 7px; border-radius:8px; font-weight:600; }
   .aur-status.online { background:rgba(34,197,94,.12); color:var(--online); }
   .aur-status.offline { background:rgba(100,116,139,.12); color:var(--muted); }
   .aur-status.muted { background:rgba(251,146,60,.12); color:var(--warn); }
   .aur-status.banned { background:rgba(248,113,113,.12); color:var(--danger); }
-  .admin-user-row .aur-actions { display:flex; gap:4px; }
+  .admin-user-row .aur-actions { display:flex; gap:4px; flex-wrap:wrap; }
   .aur-btn { border:none; cursor:pointer; font-size:.72rem; font-weight:600; font-family:var(--font); padding:4px 10px; border-radius:6px; transition:filter .15s; }
   .aur-btn.mute-btn { background:rgba(251,146,60,.15); color:var(--warn); }
   .aur-btn.mute-btn:hover { filter:brightness(1.2); }
@@ -418,6 +427,8 @@
   .aur-btn.unban-btn:hover { filter:brightness(1.2); }
   .aur-btn.unmute-btn { background:rgba(167,139,250,.12); color:var(--accent); }
   .aur-btn.unmute-btn:hover { filter:brightness(1.2); }
+  .aur-btn.roles-btn { background:rgba(167,139,250,.12); color:var(--accent); }
+  .aur-btn.roles-btn:hover { filter:brightness(1.2); }
   .admin-mute-duration-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .mute-dur-btn { border:1.5px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; padding:5px 12px; font-size:.8rem; font-weight:600; cursor:pointer; font-family:var(--font); transition:border-color .15s,background .15s; }
   .mute-dur-btn:hover,.mute-dur-btn.active { border-color:var(--warn); background:rgba(251,146,60,.1); color:var(--warn); }
@@ -428,6 +439,46 @@
 
   /* MUTE CONFIRM MODAL */
   .mute-confirm-box { width:min(340px,92vw); }
+
+  /* ═══════════════════════════════════════════════
+     ROLES SYSTEM
+  ═══════════════════════════════════════════════ */
+  .role-add-btn { border:none; background:rgba(167,139,250,.12); color:var(--accent); border-radius:8px; padding:5px 10px; font-size:.74rem; font-weight:600; cursor:pointer; font-family:var(--font); transition:background .15s; }
+  .role-add-btn:hover { background:rgba(167,139,250,.22); }
+  .admin-role-list { display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto; }
+  .admin-role-list::-webkit-scrollbar { width:3px; }
+  .admin-role-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .admin-role-row { display:flex; align-items:center; gap:10px; padding:8px 10px; background:var(--card); border:1px solid var(--border); border-radius:10px; }
+  .admin-role-row .role-swatch-mini { width:16px; height:16px; border-radius:5px; flex-shrink:0; border:1px solid rgba(255,255,255,.15); }
+  .admin-role-row .role-icon-mini { width:18px; height:18px; border-radius:4px; object-fit:cover; flex-shrink:0; }
+  .admin-role-row .arr-name { flex:1; font-size:.85rem; font-weight:600; }
+  .admin-role-row .arr-actions { display:flex; gap:4px; }
+  .role-empty-hint { font-size:.8rem; color:var(--muted); padding:8px; }
+
+  .role-modal-box { width:min(420px,92vw); }
+  .role-icon-picker { width:64px; height:64px; border-radius:14px; margin:0 auto 16px; background:var(--card); border:1.5px dashed var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; transition:border-color .15s; }
+  .role-icon-picker:hover { border-color:var(--accent); }
+  .role-icon-picker img { width:100%; height:100%; object-fit:cover; }
+  .role-icon-picker-placeholder { font-size:1.4rem; opacity:.5; }
+  .role-color-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px; }
+  .role-color-swatch { width:30px; height:30px; border-radius:8px; cursor:pointer; border:2px solid transparent; transition:transform .15s,border-color .15s; }
+  .role-color-swatch:hover { transform:scale(1.1); }
+  .role-color-swatch.active { border-color:#fff; transform:scale(1.1); box-shadow:0 0 0 2px var(--accent); }
+  .role-custom-color-row { display:flex; align-items:center; gap:10px; margin-top:6px; }
+  .role-custom-color-row input[type="color"] { width:42px; height:34px; border:1.5px solid var(--border); border-radius:8px; background:none; cursor:pointer; padding:2px; }
+  .role-preview-wrap { margin-top:6px; padding:10px; background:var(--card); border-radius:10px; border:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+  .role-preview-label { font-size:.7rem; color:var(--muted); margin-right:auto; }
+
+  .assign-role-modal-box { width:min(380px,92vw); }
+  .assign-role-list { display:flex; flex-direction:column; gap:6px; max-height:300px; overflow-y:auto; margin-top:6px; }
+  .assign-role-row { display:flex; align-items:center; gap:10px; padding:8px 10px; background:var(--card); border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:border-color .15s; user-select:none; }
+  .assign-role-row:hover { border-color:var(--accent); }
+  .assign-role-row.checked { border-color:var(--accent); background:rgba(167,139,250,.08); }
+  .assign-role-row .role-swatch-mini { width:16px; height:16px; border-radius:5px; flex-shrink:0; border:1px solid rgba(255,255,255,.15); }
+  .assign-role-row .role-icon-mini { width:18px; height:18px; border-radius:4px; object-fit:cover; flex-shrink:0; }
+  .assign-role-row .arr-name { flex:1; font-size:.85rem; font-weight:600; }
+  .assign-role-row .arr-check { width:18px; height:18px; border-radius:5px; border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:.7rem; color:transparent; transition:all .15s; }
+  .assign-role-row.checked .arr-check { background:var(--accent); border-color:var(--accent); color:#fff; }
 
   @media (max-width: 600px) {
     #sidebar { display:none; }
@@ -764,6 +815,13 @@
       </div>
     </div>
     <div class="admin-section">
+      <div class="admin-section-label">
+        <span>🎭 Rôles du serveur</span>
+        <button class="role-add-btn" id="role-create-open-btn">+ Créer un rôle</button>
+      </div>
+      <div class="admin-role-list" id="admin-role-list"></div>
+    </div>
+    <div class="admin-section">
       <div class="admin-section-label">Utilisateurs inscrits</div>
       <div class="admin-user-list" id="admin-user-list"></div>
     </div>
@@ -796,6 +854,46 @@
   </div>
 </div>
 
+<!-- CREATE/EDIT ROLE MODAL -->
+<div class="modal-overlay" id="role-create-modal">
+  <div class="modal-box role-modal-box">
+    <button class="modal-close" id="role-create-close">✕</button>
+    <div class="modal-title" id="role-create-title">Créer un rôle</div>
+    <div class="role-icon-picker" id="role-icon-picker" title="Choisir une icône (optionnel)">
+      <img id="role-icon-preview" style="display:none"/>
+      <span class="role-icon-picker-placeholder" id="role-icon-placeholder">🎭</span>
+    </div>
+    <input id="role-icon-input" type="file" accept="image/*" style="display:none"/>
+    <button class="wl-btn" id="role-icon-remove-btn" style="margin-bottom:14px;display:none">🗑️ Retirer l'icône</button>
+    <label class="field-label" for="role-name-input">Nom du rôle</label>
+    <input id="role-name-input" class="field-input" type="text" placeholder="ex: Modérateur" maxlength="20" autocomplete="off" spellcheck="false"/>
+    <div class="wl-section" style="margin-top:14px">
+      <span class="wl-label">Couleur du rôle</span>
+      <div class="role-color-row" id="role-color-row"></div>
+      <div class="role-custom-color-row">
+        <input type="color" id="role-custom-color-input" value="#a78bfa"/>
+        <span style="font-size:.78rem;color:var(--muted)">Couleur personnalisée</span>
+      </div>
+    </div>
+    <div class="role-preview-wrap">
+      <span class="role-preview-label">Aperçu :</span>
+      <span class="role-tag" id="role-preview-tag"><span class="role-icon-fallback" id="role-preview-icon"></span><span id="role-preview-name">Modérateur</span></span>
+    </div>
+    <div class="pseudo-error" id="role-create-error"></div>
+    <button class="modal-btn" id="role-create-save-btn">Créer le rôle →</button>
+  </div>
+</div>
+
+<!-- ASSIGN ROLES MODAL -->
+<div class="modal-overlay" id="assign-role-modal">
+  <div class="modal-box assign-role-modal-box">
+    <button class="modal-close" id="assign-role-close">✕</button>
+    <div class="modal-title">Rôles de <span id="assign-role-target-name"></span></div>
+    <p style="font-size:.78rem;color:var(--muted);margin-top:-10px">Clique sur un rôle pour l'assigner ou le retirer.</p>
+    <div class="assign-role-list" id="assign-role-list"></div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, onDisconnect, set, remove, get, query, orderByKey, limitToLast, update }
@@ -824,6 +922,8 @@ const MUTES_REF     = ref(db, "kychat/mutes");
 const SETTINGS_REF  = ref(db, "kychat/settings");
 const CALLS_REF     = ref(db, "kychat/calls");
 const SIGNALS_REF   = ref(db, "kychat/signals"); // WebRTC signaling
+const ROLES_REF      = ref(db, "kychat/roles");
+const USER_ROLES_REF = ref(db, "kychat/userRoles");
 
 const GIPHY_KEY = "dc6zaTOxFJmzC";
 const ADMIN_ACCOUNTS = { "admin": "kyChat2024!", "modo": "modo_secret" };
@@ -847,6 +947,11 @@ let onlineUsersCache = {};
 let registeredUsersCache = {};
 let pendingMuteTarget = null;
 let unreadWhileScrolled = 0;
+let rolesCache = {};      // roleId -> { name, color, icon, createdAt }
+let userRolesCache = {};  // pseudo -> { roleId: true, ... }
+let assignRoleTargetPseudo = null;
+let editingRoleId = null;
+let stagedRoleIcon = undefined;
 
 // ═══════════ CALL STATE ═══════════
 let activeCallId   = null;   // Firebase key of the current call room
@@ -856,16 +961,20 @@ let callTimerInt   = null;
 let localStream    = null;
 let screenStream   = null;
 let peerConnections= {};     // { pseudo: RTCPeerConnection }
+let pendingIce      = {};    // { pseudo: [candidate, ...] } queued until remote desc is set
+let makingOffer      = {};   // { pseudo: bool } to avoid glare
 let myMicOn        = true;
 let myCamOn        = true;
 let ringtoneAudio  = null;
 let callListenerOff = null;
 let signalListenerOff = null;
 let callMsgKeyCache = {};    // callId -> message key in chat
+let mySignalSeenKeys = new Set();
 
 const ICE_SERVERS = { iceServers: [
   { urls: "stun:stun.l.google.com:19302" },
-  { urls: "stun:stun1.l.google.com:19302" }
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun2.l.google.com:19302" }
 ]};
 
 /* TEXT DISPLAY PREFS */
@@ -1024,6 +1133,29 @@ const adminLogoutBtn    = document.getElementById("admin-logout-btn");
 const muteConfirmModal  = document.getElementById("mute-confirm-modal");
 const muteConfirmClose  = document.getElementById("mute-confirm-close");
 const muteConfirmError  = document.getElementById("mute-confirm-error");
+// Role DOM
+const adminRoleList        = document.getElementById("admin-role-list");
+const roleCreateOpenBtn    = document.getElementById("role-create-open-btn");
+const roleCreateModal      = document.getElementById("role-create-modal");
+const roleCreateClose      = document.getElementById("role-create-close");
+const roleCreateTitle      = document.getElementById("role-create-title");
+const roleIconPicker       = document.getElementById("role-icon-picker");
+const roleIconInput        = document.getElementById("role-icon-input");
+const roleIconPreview      = document.getElementById("role-icon-preview");
+const roleIconPlaceholder  = document.getElementById("role-icon-placeholder");
+const roleIconRemoveBtn    = document.getElementById("role-icon-remove-btn");
+const roleNameInput        = document.getElementById("role-name-input");
+const roleColorRow         = document.getElementById("role-color-row");
+const roleCustomColorInput = document.getElementById("role-custom-color-input");
+const rolePreviewTag       = document.getElementById("role-preview-tag");
+const rolePreviewIcon      = document.getElementById("role-preview-icon");
+const rolePreviewName      = document.getElementById("role-preview-name");
+const roleCreateError      = document.getElementById("role-create-error");
+const roleCreateSaveBtn    = document.getElementById("role-create-save-btn");
+const assignRoleModal      = document.getElementById("assign-role-modal");
+const assignRoleClose      = document.getElementById("assign-role-close");
+const assignRoleTargetName = document.getElementById("assign-role-target-name");
+const assignRoleList       = document.getElementById("assign-role-list");
 // Call DOM
 const callHeaderBtn       = document.getElementById("call-header-btn");
 const incomingOverlay     = document.getElementById("incoming-call-overlay");
@@ -1294,7 +1426,200 @@ onValue(SETTINGS_REF, snap => {
 });
 
 /* ═══════════════════════════════════════════════════════════
-   CALL SYSTEM — WebRTC + Firebase signaling
+   ROLES SYSTEM
+═══════════════════════════════════════════════════════════ */
+const ROLE_PRESET_COLORS = ["#f87171","#fb923c","#fbbf24","#a3e635","#34d399","#22d3ee","#60a5fa","#a78bfa","#e879f9","#f472b6","#94a3b8","#ffffff"];
+ROLE_PRESET_COLORS.forEach(c => {
+  const sw = document.createElement("div");
+  sw.className = "role-color-swatch"; sw.style.background = c; sw.dataset.color = c; sw.title = c;
+  sw.addEventListener("click", () => { selectedRoleColor = c; roleCustomColorInput.value = c; refreshRoleColorUI(); refreshRolePreview(); });
+  roleColorRow.appendChild(sw);
+});
+let selectedRoleColor = ROLE_PRESET_COLORS[7];
+function refreshRoleColorUI() {
+  roleColorRow.querySelectorAll(".role-color-swatch").forEach(s => s.classList.toggle("active", s.dataset.color.toLowerCase() === selectedRoleColor.toLowerCase()));
+}
+roleCustomColorInput.addEventListener("input", () => { selectedRoleColor = roleCustomColorInput.value; refreshRoleColorUI(); refreshRolePreview(); });
+roleNameInput.addEventListener("input", refreshRolePreview);
+
+function refreshRolePreview() {
+  const name = roleNameInput.value.trim() || "Nom du rôle";
+  rolePreviewName.textContent = name;
+  rolePreviewTag.style.color = selectedRoleColor;
+  rolePreviewTag.style.borderColor = hexToRgba(selectedRoleColor, .45);
+  rolePreviewTag.style.background = hexToRgba(selectedRoleColor, .12);
+  if (stagedRoleIcon) { rolePreviewIcon.outerHTML = `<img class="role-icon" id="role-preview-icon" src="${stagedRoleIcon}"/>`; }
+  else { const cur = document.getElementById("role-preview-icon"); if (cur && cur.tagName === "IMG") cur.outerHTML = `<span class="role-icon-fallback" id="role-preview-icon" style="background:${hexToRgba(selectedRoleColor,.5)}"></span>`; else if(cur) cur.style.background = hexToRgba(selectedRoleColor,.5); }
+}
+function hexToRgba(hex, alpha) {
+  let h = hex.replace("#","");
+  if (h.length === 3) h = h.split("").map(c=>c+c).join("");
+  const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16);
+  if (isNaN(r)||isNaN(g)||isNaN(b)) return `rgba(167,139,250,${alpha})`;
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function openRoleCreateModal(editId=null) {
+  editingRoleId = editId; stagedRoleIcon = undefined;
+  roleCreateError.textContent = "";
+  if (editId && rolesCache[editId]) {
+    const r = rolesCache[editId];
+    roleCreateTitle.textContent = "Modifier le rôle";
+    roleCreateSaveBtn.textContent = "Enregistrer →";
+    roleNameInput.value = r.name || "";
+    selectedRoleColor = r.color || ROLE_PRESET_COLORS[7];
+    roleCustomColorInput.value = selectedRoleColor;
+    if (r.icon) { roleIconPreview.src = r.icon; roleIconPreview.style.display = "block"; roleIconPlaceholder.style.display = "none"; roleIconRemoveBtn.style.display = "block"; stagedRoleIcon = r.icon; }
+    else { roleIconPreview.style.display = "none"; roleIconPlaceholder.style.display = "block"; roleIconRemoveBtn.style.display = "none"; stagedRoleIcon = null; }
+  } else {
+    roleCreateTitle.textContent = "Créer un rôle";
+    roleCreateSaveBtn.textContent = "Créer le rôle →";
+    roleNameInput.value = "";
+    selectedRoleColor = ROLE_PRESET_COLORS[7];
+    roleCustomColorInput.value = selectedRoleColor;
+    roleIconPreview.style.display = "none"; roleIconPlaceholder.style.display = "block"; roleIconRemoveBtn.style.display = "none";
+    stagedRoleIcon = null;
+  }
+  refreshRoleColorUI(); refreshRolePreview();
+  roleCreateModal.classList.add("open");
+}
+roleCreateOpenBtn.addEventListener("click", () => openRoleCreateModal(null));
+roleCreateClose.addEventListener("click", () => roleCreateModal.classList.remove("open"));
+roleCreateModal.addEventListener("click", e => { if (e.target === roleCreateModal) roleCreateModal.classList.remove("open"); });
+roleIconPicker.addEventListener("click", () => roleIconInput.click());
+roleIconInput.addEventListener("change", () => {
+  const file = roleIconInput.files[0]; if (!file) return;
+  if (file.size > 1.5*1024*1024) { roleCreateError.textContent = "Icône trop grande (max 1.5 Mo)"; return; }
+  const reader = new FileReader();
+  reader.onload = e => { stagedRoleIcon = e.target.result; roleIconPreview.src = stagedRoleIcon; roleIconPreview.style.display = "block"; roleIconPlaceholder.style.display = "none"; roleIconRemoveBtn.style.display = "block"; refreshRolePreview(); };
+  reader.readAsDataURL(file); roleIconInput.value = "";
+});
+roleIconRemoveBtn.addEventListener("click", () => { stagedRoleIcon = null; roleIconPreview.style.display = "none"; roleIconPlaceholder.style.display = "block"; roleIconRemoveBtn.style.display = "none"; refreshRolePreview(); });
+
+roleCreateSaveBtn.addEventListener("click", () => {
+  const name = roleNameInput.value.trim();
+  if (!name || name.length < 2) { roleCreateError.textContent = "Nom trop court (min 2 caractères)"; return; }
+  const payload = { name, color: selectedRoleColor, icon: stagedRoleIcon || null };
+  roleCreateSaveBtn.disabled = true;
+  if (editingRoleId) {
+    update(ref(db, `kychat/roles/${editingRoleId}`), payload)
+      .then(() => { roleCreateModal.classList.remove("open"); roleCreateSaveBtn.disabled = false; })
+      .catch(() => { roleCreateError.textContent = "Erreur, réessaie."; roleCreateSaveBtn.disabled = false; });
+  } else {
+    payload.createdAt = Date.now(); payload.createdBy = adminUser || myPseudo;
+    push(ROLES_REF, payload)
+      .then(() => {
+        push(MSGS_REF, { pseudo:"Système", text:`🎭 Le rôle "${name}" a été créé par l'admin ${adminUser}.`, type:"system", ts:Date.now() });
+        roleCreateModal.classList.remove("open"); roleCreateSaveBtn.disabled = false;
+      })
+      .catch(() => { roleCreateError.textContent = "Erreur, réessaie."; roleCreateSaveBtn.disabled = false; });
+  }
+});
+
+function deleteRole(roleId, name) {
+  if (!isAdmin) return;
+  if (!confirm(`Supprimer le rôle "${name}" ? Il sera retiré de tous les membres.`)) return;
+  remove(ref(db, `kychat/roles/${roleId}`));
+  // Remove this role from every user that has it
+  Object.entries(userRolesCache).forEach(([pseudo, roles]) => {
+    if (roles && roles[roleId]) remove(ref(db, `kychat/userRoles/${pseudo}/${roleId}`));
+  });
+  push(MSGS_REF, { pseudo:"Système", text:`🗑️ Le rôle "${name}" a été supprimé par l'admin ${adminUser}.`, type:"system", ts:Date.now() });
+}
+
+function renderAdminRoleList() {
+  const entries = Object.entries(rolesCache);
+  if (!entries.length) { adminRoleList.innerHTML = `<div class="role-empty-hint">Aucun rôle créé pour l'instant.</div>`; return; }
+  adminRoleList.innerHTML = "";
+  entries.sort(([,a],[,b]) => (a.createdAt||0)-(b.createdAt||0)).forEach(([id, r]) => {
+    const row = document.createElement("div"); row.className = "admin-role-row";
+    const iconHTML = r.icon ? `<img class="role-icon-mini" src="${r.icon}"/>` : `<span class="role-swatch-mini" style="background:${r.color||'#a78bfa'}"></span>`;
+    row.innerHTML = `
+      ${iconHTML}
+      <span class="arr-name" style="color:${r.color||'#a78bfa'}">${escapeHtml(r.name||"")}</span>
+      <div class="arr-actions">
+        <button class="aur-btn roles-btn" data-action="edit">Modifier</button>
+        <button class="aur-btn ban-btn" data-action="delete">Suppr.</button>
+      </div>
+    `;
+    row.querySelector('[data-action="edit"]').addEventListener("click", () => openRoleCreateModal(id));
+    row.querySelector('[data-action="delete"]').addEventListener("click", () => deleteRole(id, r.name));
+    adminRoleList.appendChild(row);
+  });
+}
+
+function openAssignRoleModal(pseudo) {
+  assignRoleTargetPseudo = pseudo;
+  assignRoleTargetName.textContent = pseudo;
+  renderAssignRoleList();
+  assignRoleModal.classList.add("open");
+}
+assignRoleClose.addEventListener("click", () => assignRoleModal.classList.remove("open"));
+assignRoleModal.addEventListener("click", e => { if (e.target === assignRoleModal) assignRoleModal.classList.remove("open"); });
+
+function renderAssignRoleList() {
+  const entries = Object.entries(rolesCache);
+  if (!entries.length) { assignRoleList.innerHTML = `<div class="role-empty-hint">Aucun rôle à assigner. Crée-en un d'abord.</div>`; return; }
+  const myRoles = (userRolesCache[assignRoleTargetPseudo]) || {};
+  assignRoleList.innerHTML = "";
+  entries.sort(([,a],[,b]) => (a.createdAt||0)-(b.createdAt||0)).forEach(([id, r]) => {
+    const checked = !!myRoles[id];
+    const row = document.createElement("div"); row.className = "assign-role-row" + (checked ? " checked" : "");
+    const iconHTML = r.icon ? `<img class="role-icon-mini" src="${r.icon}"/>` : `<span class="role-swatch-mini" style="background:${r.color||'#a78bfa'}"></span>`;
+    row.innerHTML = `${iconHTML}<span class="arr-name" style="color:${r.color||'#a78bfa'}">${escapeHtml(r.name||"")}</span><span class="arr-check">✓</span>`;
+    row.addEventListener("click", () => toggleUserRole(assignRoleTargetPseudo, id, !checked));
+    assignRoleList.appendChild(row);
+  });
+}
+function toggleUserRole(pseudo, roleId, on) {
+  if (on) set(ref(db, `kychat/userRoles/${pseudo}/${roleId}`), true);
+  else remove(ref(db, `kychat/userRoles/${pseudo}/${roleId}`));
+}
+
+/* Build sorted list of role objects for a pseudo, oldest-created first */
+function getUserRoleList(pseudo) {
+  const myRoles = userRolesCache[pseudo]; if (!myRoles) return [];
+  return Object.keys(myRoles)
+    .filter(id => rolesCache[id])
+    .map(id => ({ id, ...rolesCache[id] }))
+    .sort((a,b) => (a.createdAt||0)-(b.createdAt||0));
+}
+function roleTagsHTML(pseudo, compact=false) {
+  const roles = getUserRoleList(pseudo);
+  if (!roles.length) return "";
+  return roles.map(r => {
+    const iconHTML = r.icon ? `<img class="role-icon" src="${r.icon}"/>` : "";
+    return `<span class="role-tag" style="color:${r.color||'#a78bfa'};border-color:${hexToRgba(r.color||'#a78bfa',.45)};background:${hexToRgba(r.color||'#a78bfa',.12)}">${iconHTML}${escapeHtml(r.name||"")}</span>`;
+  }).join("");
+}
+/* Pick the "top" (oldest = highest) role color for sorting/highlighting purposes */
+function getTopRole(pseudo) { const roles = getUserRoleList(pseudo); return roles.length ? roles[0] : null; }
+
+onValue(ROLES_REF, snap => {
+  rolesCache = snap.val() || {};
+  if (isAdmin) renderAdminRoleList();
+  if (assignRoleModal.classList.contains("open")) renderAssignRoleList();
+  renderSidebar();
+  rerenderAllMessageRoles();
+});
+onValue(USER_ROLES_REF, snap => {
+  userRolesCache = snap.val() || {};
+  if (assignRoleModal.classList.contains("open")) renderAssignRoleList();
+  renderSidebar();
+  rerenderAllMessageRoles();
+});
+
+/* Update role tags on already-rendered messages without a full re-render */
+function rerenderAllMessageRoles() {
+  msgsWrap.querySelectorAll(".msg-row[data-pseudo]").forEach(row => {
+    const pseudo = row.dataset.pseudo;
+    const slot = row.querySelector(".msg-roles-row");
+    if (slot) slot.innerHTML = roleTagsHTML(pseudo);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CALL SYSTEM — WebRTC + Firebase signaling (rewritten, reliable)
 ═══════════════════════════════════════════════════════════ */
 
 /* ── RINGTONE (Web Audio API generated tone) ── */
@@ -1323,11 +1648,11 @@ function stopRingtone() { if (ringtoneAudio) { ringtoneAudio.stop(); ringtoneAud
 /* ── GET USER MEDIA ── */
 async function getLocalStream(withVideo=true) {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: withVideo ? { width:640, height:360 } : false });
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true, autoGainControl:true }, video: withVideo ? { width:640, height:360 } : false });
     return stream;
   } catch(e) {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation:true, noiseSuppression:true, autoGainControl:true }, video: false });
       return stream;
     } catch(e2) {
       alert("Impossible d'accéder au micro/caméra : " + (e2.message || e2));
@@ -1351,6 +1676,7 @@ function upsertMyTile() {
   const video = tile.querySelector("video");
   if (localStream) {
     video.srcObject = localStream;
+    video.play().catch(()=>{});
     updateMyCamTile();
   }
 }
@@ -1378,20 +1704,21 @@ function updateMyCamTile() {
 }
 
 /* ── REMOTE VIDEO TILE ── */
-function upsertRemoteTile(pseudo, stream) {
+function upsertRemoteTile(pseudo, stream, connState) {
   let tile = callVideoGrid.querySelector(`[data-pseudo="${CSS.escape(pseudo)}"]`);
   if (!tile) {
     tile = document.createElement("div");
     tile.className = "call-video-tile"; tile.dataset.pseudo = pseudo;
     const video = document.createElement("video"); video.autoplay = true; video.playsInline = true;
     const label = document.createElement("div"); label.className = "tile-label"; label.textContent = pseudo;
-    tile.appendChild(video); tile.appendChild(label);
+    const state = document.createElement("div"); state.className = "tile-state";
+    tile.appendChild(video); tile.appendChild(label); tile.appendChild(state);
     callVideoGrid.appendChild(tile);
   }
   const video = tile.querySelector("video");
   if (stream) {
-    video.srcObject = stream;
-    const hasVideo = stream.getVideoTracks().length > 0;
+    if (video.srcObject !== stream) { video.srcObject = stream; video.play().catch(()=>{}); }
+    const hasVideo = stream.getVideoTracks().some(t => t.readyState === "live");
     video.style.display = hasVideo ? "block" : "none";
     let placeholder = tile.querySelector(".cam-off-placeholder");
     if (!hasVideo) {
@@ -1402,6 +1729,11 @@ function upsertRemoteTile(pseudo, stream) {
         placeholder.appendChild(av); placeholder.appendChild(nm); tile.appendChild(placeholder);
       }
     } else if (placeholder) { placeholder.remove(); }
+  }
+  const stateEl = tile.querySelector(".tile-state");
+  if (stateEl) {
+    if (connState === "connecting" || connState === "new" || connState === "checking") { stateEl.textContent = "Connexion…"; stateEl.style.display = "block"; }
+    else { stateEl.style.display = "none"; }
   }
 }
 function removeRemoteTile(pseudo) {
@@ -1420,6 +1752,11 @@ function updateParticipantsBar(participants) {
     chip.innerHTML = `<span class="cp-dot"></span>${escapeHtml(p)}`;
     callParticipantsBar.appendChild(chip);
   });
+  // Remove stale remote tiles for people who left
+  callVideoGrid.querySelectorAll(".call-video-tile[data-pseudo]").forEach(tile => {
+    const p = tile.dataset.pseudo;
+    if (p !== "__me__" && !participants.includes(p)) tile.remove();
+  });
 }
 
 /* ── CALL TIMER ── */
@@ -1437,27 +1774,10 @@ function stopCallTimer() { clearInterval(callTimerInt); callTimerInt = null; }
 
 /* ── CALL MESSAGE IN CHAT ── */
 function sendCallChatMessage(callId, callerPseudo, status, durationMs) {
-  // status: 'ringing' | 'active' | 'ended' | 'missed'
-  push(MSGS_REF, {
-    pseudo: "Système",
-    type: "call_event",
-    callId, callerPseudo, callStatus: status,
-    durationMs: durationMs || 0,
-    ts: Date.now()
-  });
+  push(MSGS_REF, { pseudo: "Système", type: "call_event", callId, callerPseudo, callStatus: status, durationMs: durationMs || 0, ts: Date.now() });
 }
-
-/* Update an existing call message in chat to reflect new status */
 function updateCallChatMessage(callId, status, durationMs) {
-  // Find the message with this callId and update it
-  // We just push a new event — the renderer shows the last relevant status
-  push(MSGS_REF, {
-    pseudo: "Système",
-    type: "call_event",
-    callId, callerPseudo: "", callStatus: status,
-    durationMs: durationMs || 0,
-    ts: Date.now()
-  });
+  push(MSGS_REF, { pseudo: "Système", type: "call_event", callId, callerPseudo: "", callStatus: status, durationMs: durationMs || 0, ts: Date.now() });
 }
 
 /* ── MAKE A CALL ── */
@@ -1471,6 +1791,7 @@ async function startCall() {
   const callRef = push(CALLS_REF);
   activeCallId = callRef.key;
   callRole = "caller";
+  mySignalSeenKeys = new Set();
 
   await set(callRef, {
     caller: myPseudo,
@@ -1480,19 +1801,19 @@ async function startCall() {
     startedAt: Date.now()
   });
 
-  // Auto-message in chat
   sendCallChatMessage(activeCallId, myPseudo, "ringing", 0);
 
-  // Listen to the call room
   listenCallRoom(activeCallId);
   listenSignals(activeCallId);
 
-  // Show call window
   showCallWindow();
   upsertMyTile();
   startCallTimer();
   callWinTitle.textContent = "Appel en cours…";
   callWinStatus.textContent = "En attente de participants";
+  ctrlMic.textContent = "🎙️"; ctrlMic.classList.remove("muted-ctrl");
+  ctrlCam.textContent = "📷"; ctrlCam.classList.remove("cam-off-ctrl");
+  myMicOn = true; myCamOn = true;
 
   callHeaderBtn.classList.add("in-call");
 }
@@ -1501,30 +1822,32 @@ async function startCall() {
 function listenActiveCalls() {
   onValue(CALLS_REF, snap => {
     const calls = snap.val() || {};
-    // Find any ringing call NOT started by me
-    const ringing = Object.entries(calls).find(([id, c]) =>
-      c.status === "ringing" && c.caller !== myPseudo && id !== activeCallId
-    );
-    if (ringing && !activeCallId) {
-      const [callId, callData] = ringing;
+    // Find any ringing/active call NOT started by me, that I haven't joined, where I'm not already a participant
+    const candidate = Object.entries(calls).find(([id, c]) => {
+      if (id === activeCallId) return false;
+      if ((c.status === "ringing" || c.status === "active") && c.participants && !c.participants[myPseudo]) return true;
+      return false;
+    });
+    if (candidate && !activeCallId) {
+      const [callId, callData] = candidate;
       showIncomingCall(callId, callData);
-    } else if (!ringing) {
+    } else if (!candidate) {
       hideIncomingCall();
     }
-    // If I'm in a call, update participants
     if (activeCallId && calls[activeCallId]) {
       const parts = Object.keys(calls[activeCallId].participants || {});
       updateParticipantsBar(parts);
       if (calls[activeCallId].status === "ended") {
         handleCallEnded();
       }
+    } else if (activeCallId && !calls[activeCallId]) {
+      handleCallEnded();
     }
   });
 }
 
 /* ── SHOW INCOMING ── */
 function showIncomingCall(callId, callData) {
-  // Don't re-show if already visible for same call
   if (incomingOverlay.dataset.callId === callId) return;
   incomingOverlay.dataset.callId = callId;
   incomingName.textContent = callData.caller || "Inconnu";
@@ -1536,6 +1859,7 @@ function showIncomingCall(callId, callData) {
   av.textContent = initials(callData.caller || "??");
   if (photo) { av.innerHTML = ""; const img = document.createElement("img"); img.src = photo; img.style.cssText = "width:100%;height:100%;object-fit:cover;border-radius:50%"; av.appendChild(img); }
   incomingAvatar.appendChild(av);
+  incomingOverlay.dataset.pendingCallId = callId;
   incomingOverlay.classList.add("open");
   startRingtone();
 }
@@ -1546,119 +1870,115 @@ callAcceptBtn.addEventListener("click", async () => {
   const callId = incomingOverlay.dataset.callId; if (!callId) return;
   stopRingtone();
   hideIncomingCall();
-
-  localStream = await getLocalStream(true);
-  if (!localStream) return;
-
-  activeCallId = callId; callRole = "participant";
-
-  // Add myself to participants
-  await update(ref(db, `kychat/calls/${callId}/participants/${myPseudo}`), { pseudo: myPseudo, uid: MY_ID, joinedAt: Date.now() });
-  await update(ref(db, `kychat/calls/${callId}`), { status: "active" });
-
-  // Update call message in chat
-  updateCallChatMessage(callId, "active", 0);
-
-  listenCallRoom(callId);
-  listenSignals(callId);
-
-  showCallWindow();
-  upsertMyTile();
-  startCallTimer();
-  callWinTitle.textContent = "Appel en cours";
-  callHeaderBtn.classList.add("in-call");
-
-  // Initiate peer connections with existing participants
-  const snap = await get(ref(db, `kychat/calls/${callId}/participants`));
-  const parts = snap.val() || {};
-  for (const [pseudo] of Object.entries(parts)) {
-    if (pseudo !== myPseudo) {
-      await createPeerConnection(pseudo, callId, true);
-    }
-  }
+  await joinExistingCall(callId);
 });
 
 /* ── DECLINE CALL ── */
 callDeclineBtn.addEventListener("click", () => { stopRingtone(); hideIncomingCall(); });
 
-/* ── PEER CONNECTION ── */
+/* ── PEER CONNECTION (with queued ICE + glare-safe renegotiation) ── */
 async function createPeerConnection(remotePseudo, callId, isInitiator) {
   if (peerConnections[remotePseudo]) return peerConnections[remotePseudo];
 
   const pc = new RTCPeerConnection(ICE_SERVERS);
   peerConnections[remotePseudo] = pc;
+  pendingIce[remotePseudo] = [];
 
-  // Add local tracks
   if (localStream) {
     localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
   }
 
-  // Remote stream
   const remoteStream = new MediaStream();
-  upsertRemoteTile(remotePseudo, remoteStream);
+  upsertRemoteTile(remotePseudo, remoteStream, "connecting");
   pc.ontrack = e => {
-    e.streams[0].getTracks().forEach(t => remoteStream.addTrack(t));
-    upsertRemoteTile(remotePseudo, remoteStream);
+    e.streams[0].getTracks().forEach(t => { if (!remoteStream.getTracks().includes(t)) remoteStream.addTrack(t); });
+    upsertRemoteTile(remotePseudo, remoteStream, pc.connectionState);
   };
 
-  // ICE candidates
+  pc.onconnectionstatechange = () => {
+    upsertRemoteTile(remotePseudo, remoteStream, pc.connectionState);
+    if (pc.connectionState === "failed" || pc.connectionState === "closed") {
+      // try ICE restart once
+      if (pc.connectionState === "failed" && isInitiator) {
+        pc.restartIce && pc.restartIce();
+      }
+    }
+  };
+
   pc.onicecandidate = e => {
     if (e.candidate) {
-      push(ref(db, `kychat/signals/${callId}/${remotePseudo}/from_${myPseudo}`), {
+      push(ref(db, `kychat/signals/${callId}/${remotePseudo}`), {
         type: "ice", candidate: e.candidate.toJSON(), from: myPseudo, ts: Date.now()
       });
     }
   };
 
   if (isInitiator) {
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await push(ref(db, `kychat/signals/${callId}/${myPseudo}/from_${myPseudo}`), {
-      type: "offer", sdp: offer.sdp, from: myPseudo, to: remotePseudo, ts: Date.now()
-    });
+    makingOffer[remotePseudo] = true;
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      await push(ref(db, `kychat/signals/${callId}/${remotePseudo}`), {
+        type: "offer", sdp: offer.sdp, from: myPseudo, ts: Date.now()
+      });
+    } finally { makingOffer[remotePseudo] = false; }
   }
 
   return pc;
 }
 
-/* ── LISTEN SIGNALS ── */
+async function flushPendingIce(remotePseudo) {
+  const pc = peerConnections[remotePseudo];
+  if (!pc || !pc.remoteDescription) return;
+  const queued = pendingIce[remotePseudo] || [];
+  pendingIce[remotePseudo] = [];
+  for (const cand of queued) {
+    try { await pc.addIceCandidate(cand); } catch(e) {}
+  }
+}
+
+/* ── LISTEN SIGNALS (each signal is a unique pushed key under MY pseudo's inbox) ── */
 function listenSignals(callId) {
   if (signalListenerOff) { signalListenerOff(); signalListenerOff = null; }
-  // Listen for signals addressed TO me
   const mySignalRef = ref(db, `kychat/signals/${callId}/${myPseudo}`);
-  const processedSignals = new Set();
 
   signalListenerOff = onValue(mySignalRef, async snap => {
     const allSignals = snap.val() || {};
-    for (const [key, sig] of Object.entries(allSignals)) {
-      if (processedSignals.has(key)) continue;
-      processedSignals.add(key);
-      if (sig.from === myPseudo) continue; // ignore own
+    const entries = Object.entries(allSignals).sort(([,a],[,b]) => (a.ts||0)-(b.ts||0));
+    for (const [key, sig] of entries) {
+      if (mySignalSeenKeys.has(key)) continue;
+      mySignalSeenKeys.add(key);
+      if (!sig || sig.from === myPseudo) continue;
 
-      if (sig.type === "offer") {
-        const pc = await createPeerConnection(sig.from, callId, false);
-        await pc.setRemoteDescription({ type: "offer", sdp: sig.sdp });
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        push(ref(db, `kychat/signals/${callId}/${sig.from}/from_${myPseudo}`), {
-          type: "answer", sdp: answer.sdp, from: myPseudo, to: sig.from, ts: Date.now()
-        });
-      } else if (sig.type === "answer") {
-        const pc = peerConnections[sig.from];
-        if (pc && pc.signalingState !== "stable") {
-          await pc.setRemoteDescription({ type: "answer", sdp: sig.sdp }).catch(()=>{});
+      try {
+        if (sig.type === "offer") {
+          let pc = peerConnections[sig.from];
+          if (!pc) pc = await createPeerConnection(sig.from, callId, false);
+          await pc.setRemoteDescription({ type: "offer", sdp: sig.sdp });
+          await flushPendingIce(sig.from);
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          push(ref(db, `kychat/signals/${callId}/${sig.from}`), { type: "answer", sdp: answer.sdp, from: myPseudo, ts: Date.now() });
+        } else if (sig.type === "answer") {
+          const pc = peerConnections[sig.from];
+          if (pc && pc.signalingState === "have-local-offer") {
+            await pc.setRemoteDescription({ type: "answer", sdp: sig.sdp });
+            await flushPendingIce(sig.from);
+          }
+        } else if (sig.type === "ice") {
+          const pc = peerConnections[sig.from];
+          if (pc && pc.remoteDescription) {
+            try { await pc.addIceCandidate(sig.candidate); } catch(e) {}
+          } else {
+            pendingIce[sig.from] = pendingIce[sig.from] || [];
+            pendingIce[sig.from].push(sig.candidate);
+          }
+        } else if (sig.type === "participant_joined") {
+          if (sig.from !== myPseudo && !peerConnections[sig.from]) {
+            await createPeerConnection(sig.from, callId, true);
+          }
         }
-      } else if (sig.type === "ice") {
-        const pc = peerConnections[sig.from];
-        if (pc) {
-          try { await pc.addIceCandidate(sig.candidate); } catch(e) {}
-        }
-      } else if (sig.type === "participant_joined") {
-        // New participant joined — initiate offer to them
-        if (sig.from !== myPseudo && !peerConnections[sig.from]) {
-          await createPeerConnection(sig.from, callId, true);
-        }
-      }
+      } catch(e) { /* ignore single signal errors, keep processing */ }
     }
   });
 }
@@ -1668,27 +1988,21 @@ function listenCallRoom(callId) {
   if (callListenerOff) { callListenerOff(); callListenerOff = null; }
   callListenerOff = onValue(ref(db, `kychat/calls/${callId}`), snap => {
     const callData = snap.val();
-    if (!callData) return;
+    if (!callData) { handleCallEnded(); return; }
 
     const parts = Object.keys(callData.participants || {});
     updateParticipantsBar(parts);
     callWinStatus.textContent = `${parts.length} participant${parts.length > 1 ? "s" : ""}`;
 
-    if (callData.status === "ended") {
-      handleCallEnded();
-    }
+    if (callData.status === "ended") { handleCallEnded(); return; }
+    if (callData.status === "active") { callWinTitle.textContent = "Appel en cours"; }
 
-    // If caller just joined and status is active, update title
-    if (callData.status === "active") {
-      callWinTitle.textContent = "Appel en cours";
-    }
-
-    // Notify other participants about my arrival (so they can initiate offers)
-    if (callRole === "participant" && callData.status === "active") {
-      parts.filter(p => p !== myPseudo && !peerConnections[p]).forEach(async p => {
-        await createPeerConnection(p, callId, true);
-      });
-    }
+    // Make sure I have a peer connection with every other current participant
+    parts.filter(p => p !== myPseudo && !peerConnections[p]).forEach(async p => {
+      // Deterministic initiator: pseudo that sorts first alphabetically initiates, to avoid double-offers
+      const iInitiate = myPseudo < p;
+      if (iInitiate) await createPeerConnection(p, callId, true);
+    });
   });
 }
 
@@ -1698,11 +2012,8 @@ async function endCall() {
   const elapsed = callStartedAt ? Date.now() - callStartedAt : 0;
   const callId = activeCallId;
 
-  // Mark call as ended
   await update(ref(db, `kychat/calls/${callId}`), { status: "ended", endedAt: Date.now(), durationMs: elapsed });
-  // Update chat message
   updateCallChatMessage(callId, "ended", elapsed);
-  // Cleanup signals
   remove(ref(db, `kychat/signals/${callId}`));
 
   cleanup();
@@ -1710,12 +2021,10 @@ async function endCall() {
 async function leaveCall() {
   if (!activeCallId) return;
   const callId = activeCallId;
-  // Remove myself from participants
   remove(ref(db, `kychat/calls/${callId}/participants/${myPseudo}`));
-  // If last person, end call
   const snap = await get(ref(db, `kychat/calls/${callId}/participants`));
   const parts = snap.val() || {};
-  if (Object.keys(parts).length <= 1) {
+  if (Object.keys(parts).length < 1) {
     await endCall();
   } else {
     cleanup();
@@ -1723,20 +2032,17 @@ async function leaveCall() {
 }
 
 function cleanup() {
-  // Close all peer connections
-  Object.values(peerConnections).forEach(pc => pc.close());
+  Object.values(peerConnections).forEach(pc => { try { pc.close(); } catch(e){} });
   peerConnections = {};
-  // Stop streams
+  pendingIce = {};
+  makingOffer = {};
+  mySignalSeenKeys = new Set();
   if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
   if (screenStream) { screenStream.getTracks().forEach(t => t.stop()); screenStream = null; }
-  // Listeners
   if (callListenerOff) { callListenerOff(); callListenerOff = null; }
   if (signalListenerOff) { signalListenerOff(); signalListenerOff = null; }
-  // Timer
   stopCallTimer();
-  // Reset state
   activeCallId = null; callRole = null; callStartedAt = null;
-  // UI
   callVideoGrid.innerHTML = "";
   callWindow.classList.remove("open");
   callPill.classList.remove("open");
@@ -1786,7 +2092,6 @@ ctrlScreen.addEventListener("click", async () => {
     screenStream.getTracks().forEach(t => t.stop());
     screenStream = null;
     ctrlScreen.classList.remove("active");
-    // Restore camera
     if (localStream) {
       const videoTrack = localStream.getVideoTracks()[0];
       Object.values(peerConnections).forEach(pc => {
@@ -1827,13 +2132,12 @@ callHeaderBtn.addEventListener("click", () => { if (activeCallId) expandCallWind
   document.addEventListener("mouseup", () => dragging = false);
 })();
 
-/* ── RENDER MSG with CALL EVENT support ── */
+/* ── RENDER MSG with CALL EVENT + ROLES support ── */
 let shownKeys = new Set();
 let initialLoad = true;
 
 function renderMsg(key, data, scrollForce=false) {
   if (shownKeys.has(key)) {
-    // Update call event bubble if needed
     if (data.type === "call_event") {
       const row = msgsWrap.querySelector(`[data-key="${key}"]`);
       if (row) {
@@ -1865,7 +2169,6 @@ function renderMsg(key, data, scrollForce=false) {
   if (data.type === "call_event") {
     const row = document.createElement("div");
     row.className = "msg-row"; row.dataset.key = key;
-    // Center-align call events
     row.style.cssText = "justify-content:center;margin:8px 0;";
     const bubble = buildCallBubble(data);
     row.appendChild(bubble);
@@ -1875,7 +2178,7 @@ function renderMsg(key, data, scrollForce=false) {
   }
 
   const isMe = data.pseudo === myPseudo;
-  const row = document.createElement("div"); row.className = `msg-row ${isMe?"me":""}`; row.dataset.key = key;
+  const row = document.createElement("div"); row.className = `msg-row ${isMe?"me":""}`; row.dataset.key = key; row.dataset.pseudo = data.pseudo || "";
   const isDeleted = !!data.deleted;
   let contentHTML = ""; let bubbleExtraClass = "";
   if (isDeleted) { contentHTML = "Message supprimé"; bubbleExtraClass = "deleted-bubble"; }
@@ -1896,7 +2199,7 @@ function renderMsg(key, data, scrollForce=false) {
   row.innerHTML = `
     ${avatarHTML(data.pseudo, 34, getProfilePhoto(data.pseudo))}
     <div class="bubble-group">
-      <div class="bubble-meta"><span class="meta-name">${escapeHtml(data.pseudo)}</span><span class="meta-time">${fmtTime(ts)}</span></div>
+      <div class="bubble-meta"><span class="meta-name">${escapeHtml(data.pseudo)}</span><span class="msg-roles-row">${roleTagsHTML(data.pseudo)}</span><span class="meta-time">${fmtTime(ts)}</span></div>
       ${replyHTML}
       <div class="bubble ${isMe?"me":"other"} ${bubbleExtraClass}">${contentHTML}</div>
     </div>
@@ -1956,7 +2259,6 @@ function buildCallBubble(data) {
   if (showJoin) {
     const joinBtn = bubble.querySelector(".call-join-btn");
     joinBtn.addEventListener("click", () => {
-      // Join the existing call
       const callId = data.callId;
       if (callId) joinExistingCall(callId);
     });
@@ -1969,22 +2271,33 @@ async function joinExistingCall(callId) {
   localStream = await getLocalStream(true);
   if (!localStream) return;
   activeCallId = callId; callRole = "participant";
+  mySignalSeenKeys = new Set();
+
   await update(ref(db, `kychat/calls/${callId}/participants/${myPseudo}`), { pseudo: myPseudo, uid: MY_ID, joinedAt: Date.now() });
   await update(ref(db, `kychat/calls/${callId}`), { status: "active" });
   updateCallChatMessage(callId, "active", 0);
-  // Signal other participants
-  push(ref(db, `kychat/signals/${callId}/${myPseudo}/from_${myPseudo}`), { type: "participant_joined", from: myPseudo, ts: Date.now() });
+
   listenCallRoom(callId);
   listenSignals(callId);
+
   showCallWindow();
   upsertMyTile();
   startCallTimer();
   callWinTitle.textContent = "Appel en cours";
+  ctrlMic.textContent = "🎙️"; ctrlMic.classList.remove("muted-ctrl");
+  ctrlCam.textContent = "📷"; ctrlCam.classList.remove("cam-off-ctrl");
+  myMicOn = true; myCamOn = true;
   callHeaderBtn.classList.add("in-call");
+
   const snap = await get(ref(db, `kychat/calls/${callId}/participants`));
   const parts = snap.val() || {};
   for (const [pseudo] of Object.entries(parts)) {
-    if (pseudo !== myPseudo) await createPeerConnection(pseudo, callId, true);
+    if (pseudo !== myPseudo && myPseudo < pseudo) {
+      await createPeerConnection(pseudo, callId, true);
+    } else if (pseudo !== myPseudo) {
+      // Let the other side initiate (deterministic), but notify them I'm here in case they don't pick it up via the room listener
+      push(ref(db, `kychat/signals/${callId}/${pseudo}`), { type: "participant_joined", from: myPseudo, ts: Date.now() });
+    }
   }
 }
 
@@ -2019,7 +2332,6 @@ function listenMessages() {
           }
         }
       }
-      // For call events: update in-place
       if (v.type === "call_event" && shownKeys.has(k)) {
         const row = msgsWrap.querySelector(`[data-key="${k}"]`);
         if (row) {
@@ -2067,8 +2379,16 @@ function getAllUsersMerged() {
 }
 function renderSidebar() {
   const all = getAllUsersMerged();
-  const online = all.filter(u => u.online).sort((a,b) => a.pseudo.localeCompare(b.pseudo));
-  const offline = all.filter(u => !u.online).sort((a,b) => a.pseudo.localeCompare(b.pseudo));
+  // Sort within each group by top role (oldest-created role first), then alphabetically
+  const sortFn = (a,b) => {
+    const ra = getTopRole(a.pseudo), rb = getTopRole(b.pseudo);
+    if (ra && rb) { const diff = (ra.createdAt||0)-(rb.createdAt||0); if (diff !== 0) return diff; }
+    else if (ra && !rb) return -1;
+    else if (!ra && rb) return 1;
+    return a.pseudo.localeCompare(b.pseudo);
+  };
+  const online = all.filter(u => u.online).sort(sortFn);
+  const offline = all.filter(u => !u.online).sort(sortFn);
   sidebarList.innerHTML = "";
   if (online.length) { const lbl = document.createElement("div"); lbl.className="sidebar-section-label"; lbl.textContent=`En ligne — ${online.length}`; sidebarList.appendChild(lbl); online.forEach(u => sidebarList.appendChild(buildSidebarRow(u))); }
   if (offline.length) { const lbl = document.createElement("div"); lbl.className="sidebar-section-label"; lbl.textContent=`Hors ligne — ${offline.length}`; sidebarList.appendChild(lbl); offline.forEach(u => sidebarList.appendChild(buildSidebarRow(u))); }
@@ -2076,6 +2396,7 @@ function renderSidebar() {
 function buildSidebarRow(u) {
   const isMuted = !!mutesCache[u.pseudo] && !isExpired(mutesCache[u.pseudo]);
   const isMe = u.pseudo === myPseudo;
+  const wrap = document.createElement("div"); wrap.className = "sidebar-user-row-wrap";
   const div = document.createElement("div"); div.className = "sidebar-user" + (u.online?"" : " is-offline");
   div.innerHTML = `
     <span class="s-dot${u.online?"":" offline"}"></span>
@@ -2088,7 +2409,10 @@ function buildSidebarRow(u) {
   `;
   const adminSideBtn = div.querySelector(".s-admin-btn");
   if (adminSideBtn) adminSideBtn.addEventListener("click", () => { renderAdminUserList(); renderAdminBanList(); adminPanelModal.classList.add("open"); });
-  return div;
+  wrap.appendChild(div);
+  const rolesHTML = roleTagsHTML(u.pseudo);
+  if (rolesHTML) { const rolesRow = document.createElement("div"); rolesRow.className = "sidebar-roles-row"; rolesRow.innerHTML = rolesHTML; wrap.appendChild(rolesRow); }
+  return wrap;
 }
 
 /* TYPING */
@@ -2239,7 +2563,7 @@ sizePrefSlider.addEventListener("input", () => { textPrefs.size=parseInt(sizePre
 textPrefResetBtn.addEventListener("click", () => { textPrefs={font:"default",color:"default",size:92}; localStorage.setItem("kychat_text_prefs",JSON.stringify(textPrefs)); applyTextPrefs(); refreshTextPrefUI(); });
 
 /* ADMIN */
-function showAdminUI() { adminPanelBtn.style.display="flex"; adminSubtitle.textContent=`Connecté en tant que ${adminUser}`; lockWallpaperToggle.checked=!!settingsCache.lockWallpaper; lockStickersToggle.checked=!!settingsCache.lockStickers; maxPseudoLenInput.value=getMaxPseudoLen(); renderStickerGrid(); renderSidebar(); }
+function showAdminUI() { adminPanelBtn.style.display="flex"; adminSubtitle.textContent=`Connecté en tant que ${adminUser}`; lockWallpaperToggle.checked=!!settingsCache.lockWallpaper; lockStickersToggle.checked=!!settingsCache.lockStickers; maxPseudoLenInput.value=getMaxPseudoLen(); renderStickerGrid(); renderSidebar(); renderAdminRoleList(); }
 function hideAdminUI() { adminPanelBtn.style.display="none"; }
 splashAdminLink.addEventListener("click", () => { adminLoginModal.classList.add("open"); setTimeout(()=>adminUserInput.focus(),100); });
 adminLoginClose.addEventListener("click", () => adminLoginModal.classList.remove("open"));
@@ -2255,7 +2579,7 @@ function doAdminLogin() {
     if (myPseudo) showAdminUI();
   } else { adminLoginError.textContent="Identifiant ou mot de passe incorrect."; }
 }
-adminPanelBtn.addEventListener("click", () => { renderAdminUserList(); renderAdminBanList(); adminPanelModal.classList.add("open"); });
+adminPanelBtn.addEventListener("click", () => { renderAdminUserList(); renderAdminBanList(); renderAdminRoleList(); adminPanelModal.classList.add("open"); });
 adminPanelClose.addEventListener("click", () => adminPanelModal.classList.remove("open"));
 adminPanelModal.addEventListener("click", e => { if(e.target===adminPanelModal) adminPanelModal.classList.remove("open"); });
 lockWallpaperToggle.addEventListener("change", () => { update(SETTINGS_REF,{lockWallpaper:lockWallpaperToggle.checked}); });
@@ -2268,7 +2592,8 @@ function renderAdminUserList() {
     const muted=mutesCache[u.pseudo]&&!isExpired(mutesCache[u.pseudo]);
     const row=document.createElement("div");row.className="admin-user-row";
     const statusClass=muted?"muted":(u.online?"online":"offline");const statusText=muted?"muté":(u.online?"en ligne":"hors ligne");
-    row.innerHTML=`<div class="aur-name">${escapeHtml(u.pseudo)}</div><span class="aur-status ${statusClass}">${statusText}</span><div class="aur-actions">${muted?`<button class="aur-btn unmute-btn" data-pseudo="${escapeHtml(u.pseudo)}">Démuter</button>`:`<button class="aur-btn mute-btn" data-pseudo="${escapeHtml(u.pseudo)}">Muter</button>`}<button class="aur-btn ban-btn" data-uid="${u.uid||''}" data-pseudo="${escapeHtml(u.pseudo)}">Bannir</button></div>`;
+    row.innerHTML=`<div class="aur-name">${escapeHtml(u.pseudo)}</div><span class="aur-status ${statusClass}">${statusText}</span><div class="aur-actions"><button class="aur-btn roles-btn" data-pseudo="${escapeHtml(u.pseudo)}">🎭 Rôles</button>${muted?`<button class="aur-btn unmute-btn" data-pseudo="${escapeHtml(u.pseudo)}">Démuter</button>`:`<button class="aur-btn mute-btn" data-pseudo="${escapeHtml(u.pseudo)}">Muter</button>`}<button class="aur-btn ban-btn" data-uid="${u.uid||''}" data-pseudo="${escapeHtml(u.pseudo)}">Bannir</button></div>`;
+    row.querySelector(".roles-btn")?.addEventListener("click",()=>openAssignRoleModal(u.pseudo));
     row.querySelector(".mute-btn")?.addEventListener("click",()=>openMuteConfirm(u.pseudo));
     row.querySelector(".unmute-btn")?.addEventListener("click",()=>doUnmute(u.pseudo));
     row.querySelector(".ban-btn")?.addEventListener("click",()=>doBan(u.uid||u.pseudo,u.pseudo));
