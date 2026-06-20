@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>KyChat 💬 (Le IV REICH)</title>
+<title>KyChat 💬</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -169,6 +169,8 @@
   .bubble img.msg-gif { max-width:260px; max-height:220px; border-radius:10px; display:block; margin-top:0; cursor:zoom-in; }
   .bubble.sticker-bubble { background:none!important; border:none!important; box-shadow:none!important; padding:0!important; }
   .bubble img.msg-sticker { width:140px; height:140px; object-fit:contain; display:block; cursor:zoom-in; filter:drop-shadow(0 4px 10px rgba(0,0,0,.35)); }
+  .msg-mention { color:var(--accent); font-weight:700; background:rgba(167,139,250,.14); border-radius:5px; padding:0 3px; }
+  .msg-mention.mention-me { background:rgba(251,146,60,.22); color:var(--warn); }
 
   /* CALL MESSAGE BUBBLE */
   .call-msg-bubble { display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--border); border-radius:12px; padding:10px 14px; min-width:220px; }
@@ -190,12 +192,36 @@
   .msg-row:hover .msg-actions { opacity:1; }
   .msg-row.me .msg-actions { order:-1; }
   .msg-row .reply-action-btn,
+  .msg-row .react-action-btn,
   .msg-row .admin-action-btn { background:var(--card); border:1px solid var(--border); border-radius:50%; width:28px; height:28px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted); transition:color .15s,border-color .15s; flex-shrink:0; }
   .msg-row .reply-action-btn:hover { color:var(--accent); border-color:var(--accent); }
   .msg-row .reply-action-btn svg { width:14px; height:14px; }
+  .msg-row .react-action-btn:hover { color:var(--warn); border-color:var(--warn); }
+  .msg-row .react-action-btn svg { width:14px; height:14px; }
   .msg-row .admin-action-btn { background:rgba(248,113,113,.1); border-color:rgba(248,113,113,.3); color:var(--danger); }
   .msg-row .admin-action-btn:hover { background:rgba(248,113,113,.2); }
   .msg-row .admin-action-btn svg { width:13px; height:13px; }
+
+  /* REACTIONS */
+  .reactions-row { display:flex; flex-wrap:wrap; gap:4px; margin-top:3px; padding:0 4px; }
+  .msg-row.me .reactions-row { justify-content:flex-end; }
+  .reaction-pill { display:flex; align-items:center; gap:4px; background:var(--card); border:1.5px solid var(--border); border-radius:14px; padding:2px 8px; font-size:.76rem; cursor:pointer; transition:border-color .15s,background .15s,transform .1s; user-select:none; }
+  .reaction-pill:hover { transform:scale(1.05); border-color:var(--accent); }
+  .reaction-pill.mine { border-color:var(--accent); background:rgba(167,139,250,.14); }
+  .reaction-pill .r-count { font-size:.7rem; color:var(--muted); font-weight:600; }
+  .reaction-pill.mine .r-count { color:var(--accent); }
+  .reaction-picker { position:absolute; bottom:100%; margin-bottom:6px; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:6px; display:none; gap:2px; box-shadow:0 8px 24px rgba(0,0,0,.5); z-index:40; }
+  .reaction-picker.open { display:flex; }
+  .reaction-picker button { font-size:1.15rem; width:30px; height:30px; display:flex; align-items:center; justify-content:center; border:none; background:none; border-radius:8px; cursor:pointer; transition:background .1s,transform .1s; }
+  .reaction-picker button:hover { background:rgba(167,139,250,.15); transform:scale(1.15); }
+
+  /* MENTION AUTOCOMPLETE */
+  #mention-autocomplete { position:absolute; bottom:100%; left:16px; margin-bottom:6px; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:6px; width:220px; max-height:220px; overflow-y:auto; box-shadow:0 8px 28px rgba(0,0,0,.5); display:none; z-index:60; }
+  #mention-autocomplete.open { display:block; }
+  .mention-opt { display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:8px; cursor:pointer; font-size:.85rem; transition:background .1s; }
+  .mention-opt:hover, .mention-opt.active { background:rgba(167,139,250,.15); }
+  .mention-opt .mo-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mention-opt .mo-tag { font-size:.68rem; color:var(--warn); font-weight:700; }
 
   /* REPLY BAR */
   #reply-bar { display:none; padding:8px 16px 4px; background:var(--surface); border-top:1px solid var(--border); }
@@ -211,7 +237,7 @@
   #typing-bar { padding:4px 16px 2px; min-height:22px; font-size:.75rem; color:var(--muted); font-style:italic; flex-shrink:0; }
 
   /* INPUT */
-  #input-area { padding:12px 16px 16px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; }
+  #input-area { padding:12px 16px 16px; background:var(--surface); border-top:1px solid var(--border); flex-shrink:0; position:relative; }
   .input-row { display:flex; align-items:flex-end; gap:10px; background:var(--card); border:1.5px solid var(--border); border-radius:24px; padding:8px 8px 8px 16px; transition:border-color .2s,box-shadow .2s; }
   .input-row:focus-within { border-color:var(--accent); box-shadow:0 0 0 3px rgba(167,139,250,.12); }
   #msg-input { flex:1; background:none; border:none; outline:none; color:var(--text); font-family:var(--font); font-size:.95rem; resize:none; max-height:120px; line-height:1.5; padding:4px 0; }
@@ -235,6 +261,7 @@
   /* SYS MSG */
   .sys-msg { text-align:center; font-size:.72rem; color:var(--muted); padding:4px 0; font-style:italic; letter-spacing:.02em; }
   .sys-msg.warn-msg { color:var(--warn); }
+  .sys-msg.cmd-msg { color:var(--accent); }
 
   /* EMOJI PANEL */
   #emoji-panel { position:absolute; bottom:80px; right:16px; background:var(--card); border:1px solid var(--border); border-radius:16px; padding:12px; width:280px; box-shadow:0 8px 32px rgba(0,0,0,.5); display:none; flex-wrap:wrap; gap:4px; z-index:50; }
@@ -586,8 +613,9 @@
         <button class="reply-bar-close" id="reply-bar-close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div id="input-area">
+        <div id="mention-autocomplete"></div>
         <div class="input-row">
-          <textarea id="msg-input" rows="1" placeholder="Envoie un message…" maxlength="1000"></textarea>
+          <textarea id="msg-input" rows="1" placeholder="Envoie un message… (@ pour mentionner, ! pour une commande admin)" maxlength="1000"></textarea>
           <div class="toolbar">
             <button class="tool-btn" id="emoji-toggle-btn" title="Emoji">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
@@ -816,10 +844,23 @@
     </div>
     <div class="admin-section">
       <div class="admin-section-label">
+        <span>🎭 Mes rôles (admin)</span>
+        <button class="role-add-btn" id="admin-self-roles-btn">Gérer mes rôles</button>
+      </div>
+      <div class="admin-toggle-desc" style="margin-bottom:6px">Attribue-toi des rôles du serveur pour les afficher sur tes messages.</div>
+    </div>
+    <div class="admin-section">
+      <div class="admin-section-label">
         <span>🎭 Rôles du serveur</span>
         <button class="role-add-btn" id="role-create-open-btn">+ Créer un rôle</button>
       </div>
       <div class="admin-role-list" id="admin-role-list"></div>
+    </div>
+    <div class="admin-section">
+      <div class="admin-section-label">
+        <span>⌨️ Commandes admin</span>
+      </div>
+      <div class="admin-toggle-desc">Tape <b>!help</b> dans le chat pour voir la liste. Utilise @pseudo pour cibler quelqu'un, ex : <b>!mute @Bob 15</b></div>
     </div>
     <div class="admin-section">
       <div class="admin-section-label">Utilisateurs inscrits</div>
@@ -924,6 +965,7 @@ const CALLS_REF     = ref(db, "kychat/calls");
 const SIGNALS_REF   = ref(db, "kychat/signals"); // WebRTC signaling
 const ROLES_REF      = ref(db, "kychat/roles");
 const USER_ROLES_REF = ref(db, "kychat/userRoles");
+const REACTIONS_REF  = ref(db, "kychat/reactions");
 
 const GIPHY_KEY = "dc6zaTOxFJmzC";
 const ADMIN_ACCOUNTS = { "admin": "kyChat2024!", "modo": "modo_secret" };
@@ -952,6 +994,7 @@ let userRolesCache = {};  // pseudo -> { roleId: true, ... }
 let assignRoleTargetPseudo = null;
 let editingRoleId = null;
 let stagedRoleIcon = undefined;
+let reactionsCache = {};  // msgKey -> { emoji: { pseudo: true, ... }, ... }
 
 // ═══════════ CALL STATE ═══════════
 let activeCallId   = null;   // Firebase key of the current call room
@@ -1130,6 +1173,7 @@ const adminUserList     = document.getElementById("admin-user-list");
 const adminBanList      = document.getElementById("admin-ban-list");
 const adminClearChatBtn = document.getElementById("admin-clear-chat-btn");
 const adminLogoutBtn    = document.getElementById("admin-logout-btn");
+const adminSelfRolesBtn = document.getElementById("admin-self-roles-btn");
 const muteConfirmModal  = document.getElementById("mute-confirm-modal");
 const muteConfirmClose  = document.getElementById("mute-confirm-close");
 const muteConfirmError  = document.getElementById("mute-confirm-error");
@@ -1156,6 +1200,8 @@ const assignRoleModal      = document.getElementById("assign-role-modal");
 const assignRoleClose      = document.getElementById("assign-role-close");
 const assignRoleTargetName = document.getElementById("assign-role-target-name");
 const assignRoleList       = document.getElementById("assign-role-list");
+// Mention DOM
+const mentionAutocomplete  = document.getElementById("mention-autocomplete");
 // Call DOM
 const callHeaderBtn       = document.getElementById("call-header-btn");
 const incomingOverlay     = document.getElementById("incoming-call-overlay");
@@ -1212,6 +1258,7 @@ document.addEventListener("click", e => {
   if (!emojiPanel.contains(e.target) && e.target !== emojiToggle) emojiPanel.classList.remove("open");
   if (!gifPanel.contains(e.target) && e.target !== gifToggle) gifPanel.classList.remove("open");
   if (!stickerPanel.contains(e.target) && e.target !== stickerToggle) stickerPanel.classList.remove("open");
+  if (!mentionAutocomplete.contains(e.target) && e.target !== msgInput) closeMentionAutocomplete();
 });
 
 async function loadGifs(searchTerm) {
@@ -1575,6 +1622,7 @@ function toggleUserRole(pseudo, roleId, on) {
   if (on) set(ref(db, `kychat/userRoles/${pseudo}/${roleId}`), true);
   else remove(ref(db, `kychat/userRoles/${pseudo}/${roleId}`));
 }
+adminSelfRolesBtn.addEventListener("click", () => { if (!myPseudo) return; openAssignRoleModal(myPseudo); });
 
 /* Build sorted list of role objects for a pseudo, oldest-created first */
 function getUserRoleList(pseudo) {
@@ -1616,6 +1664,332 @@ function rerenderAllMessageRoles() {
     const slot = row.querySelector(".msg-roles-row");
     if (slot) slot.innerHTML = roleTagsHTML(pseudo);
   });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MENTIONS (@pseudo)
+═══════════════════════════════════════════════════════════ */
+let mentionActive = false;
+let mentionStartIdx = -1;
+let mentionActiveIdx = 0;
+let mentionMatches = [];
+
+function getAllKnownPseudos() {
+  const set = new Set();
+  Object.values(onlineUsersCache).forEach(u => { if (u && u.pseudo) set.add(u.pseudo); });
+  Object.values(registeredUsersCache).forEach(u => { if (u && u.pseudo) set.add(u.pseudo); });
+  set.add("everyone");
+  return Array.from(set);
+}
+
+function closeMentionAutocomplete() {
+  mentionActive = false; mentionStartIdx = -1; mentionMatches = []; mentionActiveIdx = 0;
+  mentionAutocomplete.classList.remove("open");
+  mentionAutocomplete.innerHTML = "";
+}
+
+function renderMentionAutocomplete() {
+  if (!mentionMatches.length) { closeMentionAutocomplete(); return; }
+  mentionAutocomplete.innerHTML = "";
+  mentionMatches.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.className = "mention-opt" + (i === mentionActiveIdx ? " active" : "");
+    const isEveryone = p === "everyone";
+    row.innerHTML = `${isEveryone ? "📣" : avatarHTML(p, 22, getProfilePhoto(p))}<span class="mo-name">${isEveryone ? "everyone" : escapeHtml(p)}</span>${isEveryone ? '<span class="mo-tag">tous</span>' : ""}`;
+    row.addEventListener("mousedown", e => { e.preventDefault(); applyMention(p); });
+    mentionAutocomplete.appendChild(row);
+  });
+  mentionAutocomplete.classList.add("open");
+}
+
+function applyMention(pseudo) {
+  const val = msgInput.value;
+  const caret = msgInput.selectionStart;
+  const before = val.slice(0, mentionStartIdx);
+  const after = val.slice(caret);
+  const insertion = "@" + pseudo + " ";
+  msgInput.value = before + insertion + after;
+  const newCaret = before.length + insertion.length;
+  msgInput.focus();
+  msgInput.setSelectionRange(newCaret, newCaret);
+  closeMentionAutocomplete();
+  autoResize();
+}
+
+function updateMentionAutocomplete() {
+  const caret = msgInput.selectionStart;
+  const val = msgInput.value.slice(0, caret);
+  const m = val.match(/(^|\s)@([\w\-.éàèùâêîôûçœ]*)$/i);
+  if (!m) { closeMentionAutocomplete(); return; }
+  const term = m[2].toLowerCase();
+  mentionStartIdx = caret - m[2].length - 1;
+  const all = getAllKnownPseudos().filter(p => p.toLowerCase().startsWith(term) && p !== myPseudo);
+  mentionMatches = all.slice(0, 8);
+  mentionActiveIdx = 0;
+  renderMentionAutocomplete();
+}
+
+msgInput.addEventListener("input", updateMentionAutocomplete);
+msgInput.addEventListener("click", updateMentionAutocomplete);
+msgInput.addEventListener("keydown", e => {
+  if (mentionActive === false && !mentionAutocomplete.classList.contains("open")) return;
+  if (!mentionAutocomplete.classList.contains("open")) return;
+  if (e.key === "ArrowDown") { e.preventDefault(); mentionActiveIdx = Math.min(mentionMatches.length-1, mentionActiveIdx+1); renderMentionAutocomplete(); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); mentionActiveIdx = Math.max(0, mentionActiveIdx-1); renderMentionAutocomplete(); }
+  else if (e.key === "Enter" || e.key === "Tab") { if (mentionMatches[mentionActiveIdx]) { e.preventDefault(); applyMention(mentionMatches[mentionActiveIdx]); } }
+  else if (e.key === "Escape") { closeMentionAutocomplete(); }
+});
+// keep mentionActive in sync (used purely as a guard flag)
+const _origUpdateMentionAutocomplete = updateMentionAutocomplete;
+msgInput.addEventListener("input", () => { mentionActive = mentionAutocomplete.classList.contains("open"); });
+
+/* Turn raw text into HTML with @mentions highlighted (after escaping) */
+function linkifyMentions(escapedText, knownPseudos) {
+  // escapedText already has &,<,>,\",' escaped and \n -> <br/>; mention regex must work on raw text boundaries,
+  // so we run replace on the escaped text using safe word-boundary-ish matching for pseudos (no HTML-special chars expected in pseudos).
+  return escapedText.replace(/(^|[\s(>])@([\w\-.éàèùâêîôûçœ]+)/gi, (whole, pre, name) => {
+    const lowerName = name.toLowerCase();
+    const isEveryone = lowerName === "everyone";
+    const matchedPseudo = isEveryone ? "everyone" : knownPseudos.find(p => p.toLowerCase() === lowerName);
+    if (!matchedPseudo) return whole;
+    const isMe = !isEveryone && myPseudo && matchedPseudo.toLowerCase() === myPseudo.toLowerCase();
+    const meClass = (isMe || isEveryone) ? " mention-me" : "";
+    return `${pre}<span class="msg-mention${meClass}">@${escapeHtml(matchedPseudo)}</span>`;
+  });
+}
+function extractMentionedPseudos(text) {
+  if (!text) return [];
+  const known = getAllKnownPseudos();
+  const found = new Set();
+  const re = /(^|\s)@([\w\-.éàèùâêîôûçœ]+)/gi;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    const name = m[2];
+    const lower = name.toLowerCase();
+    if (lower === "everyone") { found.add("everyone"); continue; }
+    const matched = known.find(p => p.toLowerCase() === lower);
+    if (matched) found.add(matched);
+  }
+  return Array.from(found);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   REACTIONS
+═══════════════════════════════════════════════════════════ */
+const REACTION_EMOJIS = ["👍","❤️","😂","😮","😢","🔥","🎉","👏"];
+let openReactionPickerKey = null;
+
+function toggleReaction(msgKey, emoji) {
+  if (!myPseudo) return;
+  const path = `kychat/reactions/${msgKey}/${emoji}/${myPseudo}`;
+  const existing = reactionsCache[msgKey] && reactionsCache[msgKey][emoji] && reactionsCache[msgKey][emoji][myPseudo];
+  if (existing) remove(ref(db, path));
+  else set(ref(db, path), true);
+}
+
+function closeReactionPicker() {
+  if (openReactionPickerKey) {
+    const el = msgsWrap.querySelector(`.reaction-picker[data-for="${openReactionPickerKey}"]`);
+    if (el) el.classList.remove("open");
+  }
+  openReactionPickerKey = null;
+}
+
+function buildReactionPicker(msgKey) {
+  const picker = document.createElement("div");
+  picker.className = "reaction-picker"; picker.dataset.for = msgKey;
+  REACTION_EMOJIS.forEach(e => {
+    const btn = document.createElement("button"); btn.type = "button"; btn.textContent = e;
+    btn.addEventListener("click", ev => { ev.stopPropagation(); toggleReaction(msgKey, e); closeReactionPicker(); });
+    picker.appendChild(btn);
+  });
+  return picker;
+}
+
+function buildReactionsRow(msgKey) {
+  const data = reactionsCache[msgKey];
+  const row = document.createElement("div"); row.className = "reactions-row";
+  if (!data) return row;
+  Object.entries(data).forEach(([emoji, voters]) => {
+    const names = Object.keys(voters || {});
+    if (!names.length) return;
+    const mine = myPseudo && voters[myPseudo];
+    const pill = document.createElement("div");
+    pill.className = "reaction-pill" + (mine ? " mine" : "");
+    pill.title = names.join(", ");
+    pill.innerHTML = `<span>${emoji}</span><span class="r-count">${names.length}</span>`;
+    pill.addEventListener("click", () => toggleReaction(msgKey, emoji));
+    row.appendChild(pill);
+  });
+  return row;
+}
+
+function rerenderReactionsForMsg(msgKey) {
+  const row = msgsWrap.querySelector(`.msg-row[data-key="${msgKey}"]`);
+  if (!row) return;
+  const group = row.querySelector(".bubble-group");
+  if (!group) return;
+  const old = group.querySelector(".reactions-row");
+  const fresh = buildReactionsRow(msgKey);
+  if (old) old.replaceWith(fresh); else group.appendChild(fresh);
+}
+
+onValue(REACTIONS_REF, snap => {
+  reactionsCache = snap.val() || {};
+  Object.keys(reactionsCache).forEach(rerenderReactionsForMsg);
+  // also clear reactions rows for messages that no longer have any
+  msgsWrap.querySelectorAll(".reactions-row").forEach(row => {
+    const msgRow = row.closest(".msg-row");
+    const key = msgRow && msgRow.dataset.key;
+    if (key && !reactionsCache[key]) row.innerHTML = "";
+  });
+});
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".reaction-picker") && !e.target.closest(".react-action-btn")) closeReactionPicker();
+});
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN CHAT COMMANDS  (! prefix)  — works with @mentions as target
+═══════════════════════════════════════════════════════════ */
+const ADMIN_COMMANDS_HELP = [
+  { cmd: "!help", desc: "Affiche cette liste de commandes." },
+  { cmd: "!mute @pseudo [minutes]", desc: "Mute un utilisateur (défaut 15 min)." },
+  { cmd: "!unmute @pseudo", desc: "Démute un utilisateur." },
+  { cmd: "!ban @pseudo", desc: "Bannit un utilisateur du chat." },
+  { cmd: "!unban @pseudo", desc: "Débannit un utilisateur (par pseudo)." },
+  { cmd: "!kick @pseudo", desc: "Déconnecte un utilisateur (le force hors ligne)." },
+  { cmd: "!role @pseudo NomDuRole", desc: "Attribue un rôle existant à quelqu'un." },
+  { cmd: "!unrole @pseudo NomDuRole", desc: "Retire un rôle à quelqu'un." },
+  { cmd: "!myrole NomDuRole", desc: "L'admin s'attribue (ou retire) un rôle à lui-même." },
+  { cmd: "!clear", desc: "Supprime tous les messages du chat." },
+  { cmd: "!say message", desc: "Envoie un message en tant que Système." },
+  { cmd: "!whois @pseudo", desc: "Affiche les infos d'un utilisateur." }
+];
+
+function postCmdSystem(text, warn=false) {
+  push(MSGS_REF, { pseudo: "Système", text, type: "system", warn, ts: Date.now() });
+}
+function postCmdHelp() {
+  const lines = ADMIN_COMMANDS_HELP.map(c => `<b>${escapeHtml(c.cmd)}</b> — ${escapeHtml(c.desc)}`).join("<br/>");
+  push(MSGS_REF, { pseudo: "Système", html: `🛠️ <b>Commandes admin disponibles :</b><br/>${lines}`, type: "system_html", ts: Date.now() });
+}
+function findPseudoCaseInsensitive(name) {
+  if (!name) return null;
+  const all = getAllKnownPseudos();
+  return all.find(p => p.toLowerCase() === name.toLowerCase()) || null;
+}
+function findRoleIdByName(name) {
+  const lower = (name||"").toLowerCase();
+  const entry = Object.entries(rolesCache).find(([,r]) => (r.name||"").toLowerCase() === lower);
+  return entry ? entry[0] : null;
+}
+function getUidForPseudo(pseudo) {
+  const u = onlineUsersCache[pseudo] || registeredUsersCache[pseudo];
+  return u ? u.uid : null;
+}
+
+/* Returns true if the text was handled as a command (so it should NOT be sent as a normal chat message) */
+function tryHandleAdminCommand(rawText) {
+  const text = rawText.trim();
+  if (!text.startsWith("!")) return false;
+
+  // !help works for everyone (informative), other commands require admin
+  const parts = text.split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+
+  if (cmd === "!help") { postCmdHelp(); return true; }
+
+  if (!isAdmin) { postCmdSystem(`⚠️ ${myPseudo}, seuls les admins peuvent utiliser cette commande. Tape !help pour la liste.`, true); return true; }
+
+  const mentionMatch = text.match(/@([\w\-.éàèùâêîôûçœ]+)/);
+  const targetRaw = mentionMatch ? mentionMatch[1] : null;
+  const target = targetRaw ? findPseudoCaseInsensitive(targetRaw) : null;
+
+  switch (cmd) {
+    case "!mute": {
+      if (!target) { postCmdSystem("⚠️ Utilisation : !mute @pseudo [minutes]", true); return true; }
+      const numArg = parts.find((p,i) => i>0 && /^\d+$/.test(p));
+      const minutes = numArg ? parseInt(numArg,10) : 15;
+      doMute(target, minutes);
+      return true;
+    }
+    case "!unmute": {
+      if (!target) { postCmdSystem("⚠️ Utilisation : !unmute @pseudo", true); return true; }
+      doUnmute(target);
+      return true;
+    }
+    case "!ban": {
+      if (!target) { postCmdSystem("⚠️ Utilisation : !ban @pseudo", true); return true; }
+      const uid = getUidForPseudo(target);
+      if (!uid) { postCmdSystem(`⚠️ UID introuvable pour ${target}.`, true); return true; }
+      set(ref(db, `kychat/bans/${uid}`), { pseudo: target, bannedBy: adminUser, bannedAt: Date.now(), uid });
+      postCmdSystem(`🚫 ${target} a été banni par l'admin ${adminUser} (commande).`, true);
+      return true;
+    }
+    case "!unban": {
+      if (!target) { postCmdSystem("⚠️ Utilisation : !unban @pseudo", true); return true; }
+      const entry = Object.entries(bansCache).find(([,info]) => (info.pseudo||"").toLowerCase() === target.toLowerCase());
+      if (!entry) { postCmdSystem(`⚠️ Aucun ban actif trouvé pour ${target}.`, true); return true; }
+      remove(ref(db, `kychat/bans/${entry[0]}`));
+      postCmdSystem(`✅ ${target} a été débanni par l'admin ${adminUser} (commande).`);
+      return true;
+    }
+    case "!kick": {
+      if (!target) { postCmdSystem("⚠️ Utilisation : !kick @pseudo", true); return true; }
+      remove(ref(db, `kychat/online/${target}`));
+      postCmdSystem(`👢 ${target} a été déconnecté par l'admin ${adminUser}.`, true);
+      return true;
+    }
+    case "!role": {
+      if (!target) { postCmdSystem("⚠️ Utilisation : !role @pseudo NomDuRole", true); return true; }
+      const roleName = parts.slice(2).join(" ").trim();
+      const roleId = findRoleIdByName(roleName);
+      if (!roleId) { postCmdSystem(`⚠️ Rôle "${roleName}" introuvable.`, true); return true; }
+      set(ref(db, `kychat/userRoles/${target}/${roleId}`), true);
+      postCmdSystem(`🎭 Le rôle "${rolesCache[roleId].name}" a été attribué à ${target} par l'admin ${adminUser}.`);
+      return true;
+    }
+    case "!unrole": {
+      if (!target) { postCmdSystem("⚠️ Utilisation : !unrole @pseudo NomDuRole", true); return true; }
+      const roleName = parts.slice(2).join(" ").trim();
+      const roleId = findRoleIdByName(roleName);
+      if (!roleId) { postCmdSystem(`⚠️ Rôle "${roleName}" introuvable.`, true); return true; }
+      remove(ref(db, `kychat/userRoles/${target}/${roleId}`));
+      postCmdSystem(`🎭 Le rôle "${rolesCache[roleId].name}" a été retiré à ${target} par l'admin ${adminUser}.`);
+      return true;
+    }
+    case "!myrole": {
+      const roleName = parts.slice(1).join(" ").trim();
+      const roleId = findRoleIdByName(roleName);
+      if (!roleId) { postCmdSystem(`⚠️ Rôle "${roleName}" introuvable. Crée-le d'abord dans le panneau admin.`, true); return true; }
+      const has = userRolesCache[myPseudo] && userRolesCache[myPseudo][roleId];
+      toggleUserRole(myPseudo, roleId, !has);
+      postCmdSystem(`🎭 L'admin ${adminUser} s'est ${has?"retiré":"attribué"} le rôle "${rolesCache[roleId].name}".`);
+      return true;
+    }
+    case "!clear": {
+      remove(MSGS_REF).then(() => { shownKeys.clear(); lastDateLabel=""; msgsWrap.innerHTML=""; postCmdSystem(`🗑️ Le chat a été purgé par l'admin ${adminUser}.`, true); });
+      return true;
+    }
+    case "!say": {
+      const msg = text.slice(cmd.length).trim();
+      if (!msg) { postCmdSystem("⚠️ Utilisation : !say message", true); return true; }
+      postCmdSystem(`📢 ${msg}`);
+      return true;
+    }
+    case "!whois": {
+      if (!target) { postCmdSystem("⚠️ Utilisation : !whois @pseudo", true); return true; }
+      const online = !!onlineUsersCache[target];
+      const muted = mutesCache[target] && !isExpired(mutesCache[target]);
+      const roles = getUserRoleList(target).map(r=>r.name).join(", ") || "aucun";
+      postCmdSystem(`ℹ️ ${target} — ${online?"en ligne":"hors ligne"} — ${muted?"muté":"non muté"} — rôles : ${roles}`);
+      return true;
+    }
+    default:
+      postCmdSystem(`⚠️ Commande inconnue : ${cmd}. Tape !help pour la liste.`, true);
+      return true;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -2132,7 +2506,7 @@ callHeaderBtn.addEventListener("click", () => { if (activeCallId) expandCallWind
   document.addEventListener("mouseup", () => dragging = false);
 })();
 
-/* ── RENDER MSG with CALL EVENT + ROLES support ── */
+/* ── RENDER MSG with CALL EVENT + ROLES + MENTIONS + REACTIONS support ── */
 let shownKeys = new Set();
 let initialLoad = true;
 
@@ -2158,9 +2532,11 @@ function renderMsg(key, data, scrollForce=false) {
     msgsWrap.appendChild(sep);
   }
 
-  if (data.type === "system") {
-    const d = document.createElement("div");
-    d.className = "sys-msg" + (data.warn ? " warn-msg" : ""); d.textContent = data.text;
+  if (data.type === "system" || data.type === "system_html") {
+    const d = document.createElement("div"); d.dataset.key = key;
+    d.className = "sys-msg" + (data.warn ? " warn-msg" : "") + (data.type === "system_html" ? " cmd-msg" : "");
+    if (data.type === "system_html") d.innerHTML = data.html || "";
+    else d.textContent = data.text;
     msgsWrap.appendChild(d);
     if (!isAtBottom()) { unreadWhileScrolled++; updateScrollFab(); }
     scrollBottom(scrollForce); return;
@@ -2181,11 +2557,12 @@ function renderMsg(key, data, scrollForce=false) {
   const row = document.createElement("div"); row.className = `msg-row ${isMe?"me":""}`; row.dataset.key = key; row.dataset.pseudo = data.pseudo || "";
   const isDeleted = !!data.deleted;
   let contentHTML = ""; let bubbleExtraClass = "";
+  const knownPseudos = getAllKnownPseudos();
   if (isDeleted) { contentHTML = "Message supprimé"; bubbleExtraClass = "deleted-bubble"; }
   else if (data.type === "image" && data.dataUrl) { contentHTML = `<img class="msg-img" src="${data.dataUrl}" alt="image" loading="lazy"/>`; }
   else if (data.type === "gif" && data.dataUrl) { contentHTML = `<img class="msg-gif" src="${data.dataUrl}" alt="GIF" loading="lazy"/>`; }
   else if (data.type === "sticker" && data.dataUrl) { bubbleExtraClass = "sticker-bubble"; contentHTML = `<img class="msg-sticker" src="${data.dataUrl}" alt="${escapeHtml(data.name||'sticker')}" loading="lazy"/>`; }
-  else { contentHTML = escapeHtml(data.text || ""); bubbleExtraClass = "text-msg"; }
+  else { contentHTML = linkifyMentions(escapeHtml(data.text || ""), knownPseudos); bubbleExtraClass = "text-msg"; }
 
   let replyHTML = "";
   if (data.replyTo && !isDeleted) {
@@ -2193,6 +2570,7 @@ function renderMsg(key, data, scrollForce=false) {
     replyHTML = `<div class="reply-preview" data-replykey="${rp.key||''}"><div class="rp-name">${escapeHtml(rp.pseudo||"")}</div><div class="rp-text">${rText}</div></div>`;
   }
   const actionsHTML = `
+    ${!isDeleted ? `<button class="react-action-btn" title="Réagir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>` : ""}
     ${!isDeleted ? `<button class="reply-action-btn" title="Répondre"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg></button>` : ""}
     ${isAdmin && !isDeleted ? `<button class="admin-action-btn" title="Supprimer (admin)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>` : ""}
   `;
@@ -2201,7 +2579,7 @@ function renderMsg(key, data, scrollForce=false) {
     <div class="bubble-group">
       <div class="bubble-meta"><span class="meta-name">${escapeHtml(data.pseudo)}</span><span class="msg-roles-row">${roleTagsHTML(data.pseudo)}</span><span class="meta-time">${fmtTime(ts)}</span></div>
       ${replyHTML}
-      <div class="bubble ${isMe?"me":"other"} ${bubbleExtraClass}">${contentHTML}</div>
+      <div class="bubble ${isMe?"me":"other"} ${bubbleExtraClass}" style="position:relative">${contentHTML}</div>
     </div>
     <div class="msg-actions">${actionsHTML}</div>
   `;
@@ -2212,7 +2590,36 @@ function renderMsg(key, data, scrollForce=false) {
   if (adminDelBtn) adminDelBtn.addEventListener("click", () => adminDeleteMsg(key));
   const rpPreview = row.querySelector(".reply-preview");
   if (rpPreview) rpPreview.addEventListener("click", () => scrollToMsg(rpPreview.dataset.replykey));
+
+  const reactBtn = row.querySelector(".react-action-btn");
+  if (reactBtn) {
+    reactBtn.style.position = "relative";
+    reactBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      const already = reactBtn.querySelector(".reaction-picker");
+      const wasOpen = openReactionPickerKey === key;
+      closeReactionPicker();
+      if (wasOpen) return;
+      const picker = buildReactionPicker(key);
+      reactBtn.appendChild(picker);
+      requestAnimationFrame(() => picker.classList.add("open"));
+      openReactionPickerKey = key;
+    });
+  }
+
+  // Notify if this message mentions me
+  if (!isMe && data.text && myPseudo) {
+    const mentioned = extractMentionedPseudos(data.text);
+    if (mentioned.includes(myPseudo) || mentioned.includes("everyone")) {
+      row.dataset.mentionsMe = "1";
+    }
+  }
+
   msgsWrap.appendChild(row);
+  // Reactions row (appended after bubble, inside bubble-group)
+  const group = row.querySelector(".bubble-group");
+  if (group && !isDeleted) group.appendChild(buildReactionsRow(key));
+
   if (!isAtBottom()) { unreadWhileScrolled++; updateScrollFab(); }
   scrollBottom(scrollForce);
 }
@@ -2327,8 +2734,9 @@ function listenMessages() {
           const bubble = row.querySelector(".bubble");
           if (bubble && !bubble.classList.contains("deleted-bubble")) {
             bubble.classList.add("deleted-bubble"); bubble.innerHTML = "Message supprimé";
-            const replyBtn = row.querySelector(".reply-action-btn"); const adminBtn = row.querySelector(".admin-action-btn");
-            if (replyBtn) replyBtn.remove(); if (adminBtn) adminBtn.remove();
+            const replyBtn = row.querySelector(".reply-action-btn"); const adminBtn = row.querySelector(".admin-action-btn"); const reactBtn = row.querySelector(".react-action-btn");
+            if (replyBtn) replyBtn.remove(); if (adminBtn) adminBtn.remove(); if (reactBtn) reactBtn.remove();
+            const reactionsRow = row.querySelector(".reactions-row"); if (reactionsRow) reactionsRow.remove();
           }
         }
       }
@@ -2434,14 +2842,27 @@ msgInput.addEventListener("input", () => { clearTimeout(typingTimer); setTyping(
 function sendText() {
   if (isUserMuted()) return;
   const text = msgInput.value.trim(); if (!text) return;
+
+  // Admin / help commands intercept before sending as a normal message
+  if (text.startsWith("!")) {
+    const handled = tryHandleAdminCommand(text);
+    if (handled) { msgInput.value = ""; msgInput.style.height = "auto"; setTyping(false); clearTimeout(typingTimer); closeMentionAutocomplete(); return; }
+  }
+
   const msgObj = { pseudo: myPseudo, uid: MY_ID, text, type: "text", ts: Date.now() };
   if (replyTarget) { msgObj.replyTo = { key: replyTarget.key, pseudo: replyTarget.pseudo, text: replyTarget.text }; clearReply(); }
   push(MSGS_REF, msgObj);
   msgInput.value = ""; msgInput.style.height = "auto";
   setTyping(false); clearTimeout(typingTimer);
+  closeMentionAutocomplete();
 }
 sendBtn.addEventListener("click", sendText);
-msgInput.addEventListener("keydown", e => { if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); sendText(); } });
+msgInput.addEventListener("keydown", e => {
+  if (e.key==="Enter" && !e.shiftKey) {
+    if (mentionAutocomplete.classList.contains("open")) return; // handled by mention keydown listener (selects suggestion)
+    e.preventDefault(); sendText();
+  }
+});
 
 /* SEND IMAGE */
 imgBtn.addEventListener("click", () => imgInput.click());
