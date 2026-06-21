@@ -468,6 +468,49 @@
   .mute-confirm-box { width:min(340px,92vw); }
 
   /* ═══════════════════════════════════════════════
+     ANNOUNCEMENT BANNER (admin-authored welcome message)
+  ═══════════════════════════════════════════════ */
+  #announcement-banner { display:none; flex-shrink:0; position:relative; padding:16px 44px 16px 18px; background:linear-gradient(135deg,rgba(124,58,237,.16),rgba(167,139,250,.08)); border-bottom:1px solid rgba(167,139,250,.3); }
+  #announcement-banner.visible { display:flex; align-items:flex-start; gap:12px; animation:announceSlide .35s cubic-bezier(.22,.68,0,1.2); }
+  @keyframes announceSlide { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:none} }
+  .announcement-icon { font-size:1.3rem; flex-shrink:0; margin-top:1px; }
+  .announcement-body { flex:1; min-width:0; overflow-wrap:break-word; white-space:pre-wrap; line-height:1.5; }
+  .announcement-close-btn { position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%; border:none; background:rgba(255,255,255,.06); color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s,color .15s; flex-shrink:0; }
+  .announcement-close-btn:hover { background:rgba(248,113,113,.18); color:var(--danger); }
+  .announcement-close-btn svg { width:14px; height:14px; }
+  .announcement-edit-btn { position:absolute; top:10px; right:46px; width:28px; height:28px; border-radius:50%; border:none; background:rgba(255,255,255,.06); color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s,color .15s; flex-shrink:0; }
+  .announcement-edit-btn:hover { background:rgba(167,139,250,.18); color:var(--accent); }
+  .announcement-edit-btn svg { width:14px; height:14px; }
+
+  /* ANNOUNCEMENT EDITOR MODAL */
+  .announcement-modal-box { width:min(620px,94vw); }
+  .announce-textarea { width:100%; min-height:160px; max-height:360px; padding:14px 16px; background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:1rem; line-height:1.55; outline:none; resize:vertical; transition:border-color .2s,box-shadow .2s; }
+  .announce-textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(167,139,250,.15); }
+  .announce-textarea::placeholder { color:var(--muted); }
+  .announce-toolbar-row { display:flex; flex-wrap:wrap; gap:18px; margin:14px 0; }
+  .announce-toolbar-col { flex:1; min-width:160px; }
+  .announce-select { width:100%; padding:9px 12px; background:var(--card); border:1.5px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-family:var(--font); font-size:.86rem; outline:none; cursor:pointer; transition:border-color .15s; }
+  .announce-select:focus { border-color:var(--accent); }
+  .announce-color-row { display:flex; flex-wrap:wrap; gap:7px; }
+  .announce-color-swatch { width:28px; height:28px; border-radius:8px; cursor:pointer; border:2px solid transparent; transition:transform .15s,border-color .15s; }
+  .announce-color-swatch:hover { transform:scale(1.1); }
+  .announce-color-swatch.active { border-color:#fff; transform:scale(1.1); box-shadow:0 0 0 2px var(--accent); }
+  .announce-size-row { display:flex; align-items:center; gap:10px; }
+  .announce-size-row input[type="range"] { flex:1; accent-color:var(--accent); }
+  .announce-size-value { font-size:.78rem; color:var(--muted); min-width:38px; text-align:right; font-family:monospace; }
+  .announce-icon-row { display:flex; flex-wrap:wrap; gap:6px; }
+  .announce-icon-btn { width:34px; height:34px; border-radius:9px; border:1.5px solid var(--border); background:var(--card); cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; transition:border-color .15s,background .15s; }
+  .announce-icon-btn:hover { border-color:var(--accent); }
+  .announce-icon-btn.active { border-color:var(--accent); background:rgba(167,139,250,.15); }
+  .announce-preview-label { font-size:.78rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; display:block; }
+  .announce-preview-box { position:relative; padding:16px 44px 16px 18px; background:linear-gradient(135deg,rgba(124,58,237,.16),rgba(167,139,250,.08)); border:1px solid rgba(167,139,250,.3); border-radius:14px; display:flex; align-items:flex-start; gap:12px; }
+  .announce-actions-row { display:flex; gap:10px; margin-top:18px; }
+  .announce-actions-row .modal-btn { margin-top:0; }
+  .announce-disable-btn { flex-shrink:0; padding:0 18px; border:1px solid rgba(248,113,113,.35); background:rgba(248,113,113,.06); border-radius:var(--radius-sm); color:var(--danger); font-family:var(--font); font-size:.88rem; font-weight:600; cursor:pointer; transition:background .15s; }
+  .announce-disable-btn:hover { background:rgba(248,113,113,.12); }
+  .announce-status-note { font-size:.76rem; color:var(--muted); margin-top:10px; line-height:1.5; }
+
+  /* ═══════════════════════════════════════════════
      ROLES SYSTEM
   ═══════════════════════════════════════════════ */
   .role-add-btn { border:none; background:rgba(167,139,250,.12); color:var(--accent); border-radius:8px; padding:5px 10px; font-size:.74rem; font-weight:600; cursor:pointer; font-family:var(--font); transition:background .15s; }
@@ -580,6 +623,13 @@
       <div class="user-chip" id="user-chip"></div>
     </div>
   </header>
+
+  <div id="announcement-banner">
+    <span class="announcement-icon" id="announcement-icon-display">📣</span>
+    <div class="announcement-body" id="announcement-body-display"></div>
+    <button class="announcement-edit-btn" id="announcement-banner-edit-btn" style="display:none" title="Éditer le message"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+    <button class="announcement-close-btn" id="announcement-close-btn" title="Masquer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
 
   <div id="body-wrap">
     <div id="sidebar">
@@ -844,6 +894,13 @@
     </div>
     <div class="admin-section">
       <div class="admin-section-label">
+        <span>📣 Message d'accueil</span>
+        <button class="role-add-btn" id="announcement-edit-open-btn">Éditer</button>
+      </div>
+      <div class="admin-toggle-desc" id="announcement-admin-status">Aucun message actif.</div>
+    </div>
+    <div class="admin-section">
+      <div class="admin-section-label">
         <span>🎭 Mes rôles (admin)</span>
         <button class="role-add-btn" id="admin-self-roles-btn">Gérer mes rôles</button>
       </div>
@@ -935,6 +992,61 @@
   </div>
 </div>
 
+<!-- ANNOUNCEMENT EDITOR MODAL -->
+<div class="modal-overlay" id="announcement-modal">
+  <div class="modal-box announcement-modal-box">
+    <button class="modal-close" id="announcement-modal-close">✕</button>
+    <div class="modal-title">📣 Message d'accueil</div>
+    <p style="font-size:.78rem;color:var(--muted);margin-bottom:16px;margin-top:-10px">Ce message s'affiche en haut du chat pour tous les utilisateurs, jusqu'à ce qu'ils le ferment (ou que tu le modifies).</p>
+
+    <label class="field-label" for="announce-textarea">Contenu du message</label>
+    <textarea id="announce-textarea" class="announce-textarea" placeholder="Écris ton annonce ici… Bienvenue sur KyChat ! Les règles du serveur sont…" maxlength="2000"></textarea>
+
+    <div class="announce-toolbar-row">
+      <div class="announce-toolbar-col">
+        <span class="wl-label">Police</span>
+        <select id="announce-font-select" class="announce-select">
+          <option value="default">Défaut (Space Grotesk)</option>
+          <option value="serif">Serif</option>
+          <option value="mono">Mono</option>
+          <option value="rounded">Arrondie</option>
+          <option value="system">Système</option>
+        </select>
+      </div>
+      <div class="announce-toolbar-col">
+        <span class="wl-label">Taille — <span id="announce-size-value">16px</span></span>
+        <div class="announce-size-row">
+          <input type="range" id="announce-size-slider" min="12" max="32" value="16"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="announce-toolbar-row">
+      <div class="announce-toolbar-col">
+        <span class="wl-label">Couleur du texte</span>
+        <div class="announce-color-row" id="announce-color-row"></div>
+      </div>
+      <div class="announce-toolbar-col">
+        <span class="wl-label">Icône</span>
+        <div class="announce-icon-row" id="announce-icon-row"></div>
+      </div>
+    </div>
+
+    <span class="announce-preview-label">Aperçu</span>
+    <div class="announce-preview-box">
+      <span id="announce-preview-icon" style="font-size:1.3rem;flex-shrink:0;margin-top:1px">📣</span>
+      <div id="announce-preview-body" style="flex:1;min-width:0;white-space:pre-wrap;line-height:1.5">Aperçu de ton message ici…</div>
+    </div>
+
+    <div class="pseudo-error" id="announcement-error"></div>
+    <div class="announce-actions-row">
+      <button class="announce-disable-btn" id="announcement-disable-btn">🗑️ Désactiver le message</button>
+      <button class="modal-btn" id="announcement-save-btn" style="flex:1">Publier →</button>
+    </div>
+    <div class="announce-status-note" id="announcement-status-note"></div>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, onDisconnect, set, remove, get, query, orderByKey, limitToLast, update }
@@ -966,6 +1078,7 @@ const SIGNALS_REF   = ref(db, "kychat/signals"); // WebRTC signaling
 const ROLES_REF      = ref(db, "kychat/roles");
 const USER_ROLES_REF = ref(db, "kychat/userRoles");
 const REACTIONS_REF  = ref(db, "kychat/reactions");
+const ANNOUNCEMENT_REF = ref(db, "kychat/announcement");
 
 const GIPHY_KEY = "dc6zaTOxFJmzC";
 const ADMIN_ACCOUNTS = { "admin": "kyChat2024!", "modo": "modo_secret" };
@@ -995,6 +1108,9 @@ let assignRoleTargetPseudo = null;
 let editingRoleId = null;
 let stagedRoleIcon = undefined;
 let reactionsCache = {};  // msgKey -> { emoji: { pseudo: true, ... }, ... }
+let announcementCache = null; // { text, font, color, size, icon, updatedAt, updatedBy } | null
+let announceSelectedColor = "default";
+let announceSelectedIcon = "📣";
 
 // ═══════════ CALL STATE ═══════════
 let activeCallId   = null;   // Firebase key of the current call room
@@ -1202,6 +1318,28 @@ const assignRoleTargetName = document.getElementById("assign-role-target-name");
 const assignRoleList       = document.getElementById("assign-role-list");
 // Mention DOM
 const mentionAutocomplete  = document.getElementById("mention-autocomplete");
+// Announcement DOM
+const announcementBanner     = document.getElementById("announcement-banner");
+const announcementIconDisplay= document.getElementById("announcement-icon-display");
+const announcementBodyDisplay= document.getElementById("announcement-body-display");
+const announcementCloseBtn   = document.getElementById("announcement-close-btn");
+const announcementBannerEditBtn = document.getElementById("announcement-banner-edit-btn");
+const announcementEditOpenBtn= document.getElementById("announcement-edit-open-btn");
+const announcementAdminStatus= document.getElementById("announcement-admin-status");
+const announcementModal      = document.getElementById("announcement-modal");
+const announcementModalClose = document.getElementById("announcement-modal-close");
+const announceTextarea       = document.getElementById("announce-textarea");
+const announceFontSelect     = document.getElementById("announce-font-select");
+const announceSizeSlider     = document.getElementById("announce-size-slider");
+const announceSizeValue      = document.getElementById("announce-size-value");
+const announceColorRow       = document.getElementById("announce-color-row");
+const announceIconRow        = document.getElementById("announce-icon-row");
+const announcePreviewIcon    = document.getElementById("announce-preview-icon");
+const announcePreviewBody    = document.getElementById("announce-preview-body");
+const announcementError      = document.getElementById("announcement-error");
+const announcementSaveBtn    = document.getElementById("announcement-save-btn");
+const announcementDisableBtn = document.getElementById("announcement-disable-btn");
+const announcementStatusNote = document.getElementById("announcement-status-note");
 // Call DOM
 const callHeaderBtn       = document.getElementById("call-header-btn");
 const incomingOverlay     = document.getElementById("incoming-call-overlay");
@@ -1850,6 +1988,156 @@ document.addEventListener("click", e => {
 });
 
 /* ═══════════════════════════════════════════════════════════
+   ANNOUNCEMENT BANNER (admin-authored welcome message)
+═══════════════════════════════════════════════════════════ */
+const ANNOUNCE_FONTS = {
+  "default": "'Space Grotesk', sans-serif",
+  "serif":   "Georgia, 'Times New Roman', serif",
+  "mono":    "'Courier New', monospace",
+  "rounded": "'Trebuchet MS', 'Comic Sans MS', sans-serif",
+  "system":  "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+};
+const ANNOUNCE_COLORS = {
+  "default": null,
+  "white":   "#f5f5f5",
+  "lavender":"#c4b5fd",
+  "mint":    "#86efac",
+  "sky":     "#7dd3fc",
+  "rose":    "#fda4af",
+  "amber":   "#fcd34d",
+  "warn":    "#fb923c"
+};
+const ANNOUNCE_ICONS = ["📣","✨","📌","⚠️","🎉","👋","🔔","💜","🛠️","📝"];
+
+Object.entries(ANNOUNCE_COLORS).forEach(([key, hex]) => {
+  const sw = document.createElement("div");
+  sw.className = "announce-color-swatch"; sw.dataset.color = key;
+  sw.style.background = hex ? hex : "linear-gradient(135deg,#1e2130,#5b21b6)";
+  sw.title = key;
+  sw.addEventListener("click", () => { announceSelectedColor = key; refreshAnnounceColorUI(); refreshAnnouncePreview(); });
+  announceColorRow.appendChild(sw);
+});
+function refreshAnnounceColorUI() {
+  announceColorRow.querySelectorAll(".announce-color-swatch").forEach(s => s.classList.toggle("active", s.dataset.color === announceSelectedColor));
+}
+ANNOUNCE_ICONS.forEach(icon => {
+  const btn = document.createElement("button");
+  btn.type = "button"; btn.className = "announce-icon-btn"; btn.textContent = icon; btn.dataset.icon = icon;
+  btn.addEventListener("click", () => { announceSelectedIcon = icon; refreshAnnounceIconUI(); refreshAnnouncePreview(); });
+  announceIconRow.appendChild(btn);
+});
+function refreshAnnounceIconUI() {
+  announceIconRow.querySelectorAll(".announce-icon-btn").forEach(b => b.classList.toggle("active", b.dataset.icon === announceSelectedIcon));
+}
+
+function refreshAnnouncePreview() {
+  const text = announceTextarea.value.trim() || "Aperçu de ton message ici…";
+  announcePreviewBody.textContent = text;
+  announcePreviewBody.style.fontFamily = ANNOUNCE_FONTS[announceFontSelect.value] || ANNOUNCE_FONTS.default;
+  announcePreviewBody.style.fontSize = announceSizeSlider.value + "px";
+  const c = ANNOUNCE_COLORS[announceSelectedColor];
+  announcePreviewBody.style.color = c || "var(--text)";
+  announcePreviewIcon.textContent = announceSelectedIcon;
+}
+announceTextarea.addEventListener("input", refreshAnnouncePreview);
+announceFontSelect.addEventListener("change", refreshAnnouncePreview);
+announceSizeSlider.addEventListener("input", () => { announceSizeValue.textContent = announceSizeSlider.value + "px"; refreshAnnouncePreview(); });
+
+function openAnnouncementModal() {
+  announcementError.textContent = "";
+  if (announcementCache) {
+    announceTextarea.value = announcementCache.text || "";
+    announceFontSelect.value = announcementCache.font || "default";
+    announceSizeSlider.value = announcementCache.size || 16;
+    announceSelectedColor = announcementCache.color || "default";
+    announceSelectedIcon = announcementCache.icon || "📣";
+    announcementStatusNote.textContent = announcementCache.updatedBy
+      ? `Dernière publication par ${announcementCache.updatedBy} le ${new Date(announcementCache.updatedAt||Date.now()).toLocaleString("fr-FR")}.`
+      : "";
+  } else {
+    announceTextarea.value = "";
+    announceFontSelect.value = "default";
+    announceSizeSlider.value = 16;
+    announceSelectedColor = "default";
+    announceSelectedIcon = "📣";
+    announcementStatusNote.textContent = "Aucun message actif pour le moment.";
+  }
+  announceSizeValue.textContent = announceSizeSlider.value + "px";
+  refreshAnnounceColorUI(); refreshAnnounceIconUI(); refreshAnnouncePreview();
+  announcementModal.classList.add("open");
+}
+announcementEditOpenBtn.addEventListener("click", openAnnouncementModal);
+announcementBannerEditBtn.addEventListener("click", openAnnouncementModal);
+announcementModalClose.addEventListener("click", () => announcementModal.classList.remove("open"));
+announcementModal.addEventListener("click", e => { if (e.target === announcementModal) announcementModal.classList.remove("open"); });
+
+announcementSaveBtn.addEventListener("click", () => {
+  if (!isAdmin) return;
+  const text = announceTextarea.value.trim();
+  if (!text) { announcementError.textContent = "Le message ne peut pas être vide."; return; }
+  if (text.length > 2000) { announcementError.textContent = "Message trop long (max 2000 caractères)."; return; }
+  const payload = {
+    text,
+    font: announceFontSelect.value,
+    size: parseInt(announceSizeSlider.value, 10),
+    color: announceSelectedColor,
+    icon: announceSelectedIcon,
+    updatedAt: Date.now(),
+    updatedBy: adminUser || myPseudo
+  };
+  announcementSaveBtn.disabled = true;
+  set(ANNOUNCEMENT_REF, payload)
+    .then(() => {
+      announcementSaveBtn.disabled = false;
+      announcementModal.classList.remove("open");
+      postCmdSystem(`📣 ${adminUser || myPseudo} a publié un nouveau message d'accueil.`);
+    })
+    .catch(() => { announcementError.textContent = "Erreur, réessaie."; announcementSaveBtn.disabled = false; });
+});
+
+announcementDisableBtn.addEventListener("click", () => {
+  if (!isAdmin) return;
+  if (!confirm("Désactiver le message d'accueil pour tout le monde ?")) return;
+  remove(ANNOUNCEMENT_REF).then(() => {
+    announcementModal.classList.remove("open");
+    postCmdSystem(`📣 ${adminUser || myPseudo} a désactivé le message d'accueil.`);
+  });
+});
+
+function announcementDismissedKey(ann) {
+  // Tied to updatedAt so a new edit re-shows the banner even if previously dismissed
+  return "kychat_announcement_dismissed_" + (ann ? ann.updatedAt : "");
+}
+function renderAnnouncementBanner() {
+  const ann = announcementCache;
+  if (isAdmin) {
+    announcementAdminStatus.textContent = ann
+      ? `Actif — publié par ${ann.updatedBy || "?"} le ${new Date(ann.updatedAt||Date.now()).toLocaleString("fr-FR")}.`
+      : "Aucun message actif.";
+  }
+  if (!ann || !ann.text) { announcementBanner.classList.remove("visible"); return; }
+  const dismissed = localStorage.getItem(announcementDismissedKey(ann)) === "1";
+  if (dismissed) { announcementBanner.classList.remove("visible"); return; }
+
+  announcementIconDisplay.textContent = ann.icon || "📣";
+  announcementBodyDisplay.textContent = ann.text;
+  announcementBodyDisplay.style.fontFamily = ANNOUNCE_FONTS[ann.font] || ANNOUNCE_FONTS.default;
+  announcementBodyDisplay.style.fontSize = (ann.size || 16) + "px";
+  const c = ANNOUNCE_COLORS[ann.color];
+  announcementBodyDisplay.style.color = c || "var(--text)";
+  announcementBannerEditBtn.style.display = isAdmin ? "flex" : "none";
+  announcementBanner.classList.add("visible");
+}
+announcementCloseBtn.addEventListener("click", () => {
+  if (announcementCache) localStorage.setItem(announcementDismissedKey(announcementCache), "1");
+  announcementBanner.classList.remove("visible");
+});
+onValue(ANNOUNCEMENT_REF, snap => {
+  announcementCache = snap.val() || null;
+  renderAnnouncementBanner();
+});
+
+/* ═══════════════════════════════════════════════════════════
    ADMIN CHAT COMMANDS  (! prefix)  — works with @mentions as target
 ═══════════════════════════════════════════════════════════ */
 const ADMIN_COMMANDS_HELP = [
@@ -1864,7 +2152,9 @@ const ADMIN_COMMANDS_HELP = [
   { cmd: "!myrole NomDuRole", desc: "L'admin s'attribue (ou retire) un rôle à lui-même." },
   { cmd: "!clear", desc: "Supprime tous les messages du chat." },
   { cmd: "!say message", desc: "Envoie un message en tant que Système." },
-  { cmd: "!whois @pseudo", desc: "Affiche les infos d'un utilisateur." }
+  { cmd: "!whois @pseudo", desc: "Affiche les infos d'un utilisateur." },
+  { cmd: "!announce message", desc: "Publie/remplace le message d'accueil (texte brut)." },
+  { cmd: "!unannounce", desc: "Désactive le message d'accueil." }
 ];
 
 function postCmdSystem(text, warn=false) {
@@ -1984,6 +2274,25 @@ function tryHandleAdminCommand(rawText) {
       const muted = mutesCache[target] && !isExpired(mutesCache[target]);
       const roles = getUserRoleList(target).map(r=>r.name).join(", ") || "aucun";
       postCmdSystem(`ℹ️ ${target} — ${online?"en ligne":"hors ligne"} — ${muted?"muté":"non muté"} — rôles : ${roles}`);
+      return true;
+    }
+    case "!announce": {
+      const msg = text.slice(cmd.length).trim();
+      if (!msg) { postCmdSystem("⚠️ Utilisation : !announce message", true); return true; }
+      if (msg.length > 2000) { postCmdSystem("⚠️ Message trop long (max 2000 caractères).", true); return true; }
+      set(ANNOUNCEMENT_REF, {
+        text: msg,
+        font: (announcementCache && announcementCache.font) || "default",
+        size: (announcementCache && announcementCache.size) || 16,
+        color: (announcementCache && announcementCache.color) || "default",
+        icon: (announcementCache && announcementCache.icon) || "📣",
+        updatedAt: Date.now(),
+        updatedBy: adminUser || myPseudo
+      }).then(() => postCmdSystem(`📣 ${adminUser} a publié un nouveau message d'accueil (commande).`));
+      return true;
+    }
+    case "!unannounce": {
+      remove(ANNOUNCEMENT_REF).then(() => postCmdSystem(`📣 ${adminUser} a désactivé le message d'accueil (commande).`));
       return true;
     }
     default:
@@ -2984,8 +3293,8 @@ sizePrefSlider.addEventListener("input", () => { textPrefs.size=parseInt(sizePre
 textPrefResetBtn.addEventListener("click", () => { textPrefs={font:"default",color:"default",size:92}; localStorage.setItem("kychat_text_prefs",JSON.stringify(textPrefs)); applyTextPrefs(); refreshTextPrefUI(); });
 
 /* ADMIN */
-function showAdminUI() { adminPanelBtn.style.display="flex"; adminSubtitle.textContent=`Connecté en tant que ${adminUser}`; lockWallpaperToggle.checked=!!settingsCache.lockWallpaper; lockStickersToggle.checked=!!settingsCache.lockStickers; maxPseudoLenInput.value=getMaxPseudoLen(); renderStickerGrid(); renderSidebar(); renderAdminRoleList(); }
-function hideAdminUI() { adminPanelBtn.style.display="none"; }
+function showAdminUI() { adminPanelBtn.style.display="flex"; adminSubtitle.textContent=`Connecté en tant que ${adminUser}`; lockWallpaperToggle.checked=!!settingsCache.lockWallpaper; lockStickersToggle.checked=!!settingsCache.lockStickers; maxPseudoLenInput.value=getMaxPseudoLen(); renderStickerGrid(); renderSidebar(); renderAdminRoleList(); renderAnnouncementBanner(); }
+function hideAdminUI() { adminPanelBtn.style.display="none"; renderAnnouncementBanner(); }
 splashAdminLink.addEventListener("click", () => { adminLoginModal.classList.add("open"); setTimeout(()=>adminUserInput.focus(),100); });
 adminLoginClose.addEventListener("click", () => adminLoginModal.classList.remove("open"));
 adminLoginModal.addEventListener("click", e => { if(e.target===adminLoginModal) adminLoginModal.classList.remove("open"); });
