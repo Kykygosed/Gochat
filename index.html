@@ -2493,7 +2493,7 @@ tcEmojiBtn.addEventListener("click", e => {
   document.body.appendChild(tmpPicker);
   setTimeout(() => document.addEventListener("click", function rem() { if (document.body.contains(tmpPicker)) document.body.removeChild(tmpPicker); document.removeEventListener("click", rem); }, { once:true }), 100);
 });
-tcPostBtn.addEventListener("click", postTweet);
+tcPostBtn.addEventListener("click", () => postTweet(null));
 function postTweet(replyToId=null) {
   const text = tweetTextarea.value.trim();
   if (!text && !tcStagedImg) return;
